@@ -61,4 +61,30 @@ describe("spike: FHE round trips", function () {
 
     await expect(contract.finalize([handle], 778n, result.decryptionProof)).to.be.reverted;
   });
+
+  it("binds the public-decryption proof to the order of the handles", async function () {
+    const factory = await ethers.getContractFactory("RoundTrip");
+    const contract = await factory.deploy();
+    await contract.waitForDeployment();
+    const address = await contract.getAddress();
+
+    const input = fhevm.createEncryptedInput(address, alice.address);
+    input.add64(11n);
+    input.add64(22n);
+    const enc = await input.encrypt();
+
+    await (await contract.connect(alice).publishPair(enc.handles[0], enc.handles[1], enc.inputProof)).wait();
+
+    const [ha, hb] = await contract.pair();
+    const result = await fhevm.publicDecrypt([ha, hb]);
+
+    // In order: accepted.
+    await (await contract.finalizePair([ha, hb], 11n, 22n, result.decryptionProof)).wait();
+    expect(await contract.pairFinalized()).to.equal(true);
+
+    // Reordered against the same proof: rejected.
+    const other = await factory.deploy();
+    await other.waitForDeployment();
+    await expect(other.finalizePair([hb, ha], 22n, 11n, result.decryptionProof)).to.be.reverted;
+  });
 });
