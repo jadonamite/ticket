@@ -1,3 +1,9 @@
+import { setDefaultResultOrder } from "node:dns";
+
+// Some networks resolve RPC hosts to IPv6 addresses they cannot actually reach, and the
+// failure surfaces as ENETUNREACH on a perfectly good endpoint. Prefer IPv4.
+setDefaultResultOrder("ipv4first");
+
 import "@fhevm/hardhat-plugin";
 import "@nomicfoundation/hardhat-chai-matchers";
 import "@nomicfoundation/hardhat-ethers";
