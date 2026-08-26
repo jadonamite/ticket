@@ -1,0 +1,16 @@
+node_modules/
+.env
+.env.local
+target/
+dist/
+.next/
+out/
+*.log
+.DS_Store
+artifacts/
+cache/
+types/
+fhevmTemp/
+coverage/
+coverage.json
+deployments/localhost/
