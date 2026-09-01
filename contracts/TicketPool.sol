@@ -33,14 +33,38 @@ contract TicketPool is WeightTree {
     /// @notice Slots are assigned once and never reused, so this only ever climbs.
     uint32 public nextSlot;
 
+    /// @notice An interaction that arrived while a draw held the tree still, waiting to be
+    ///         executed the moment the draw settles.
+    ///
+    /// @dev `payTo` is zero for a deposit — the token already moved when it was queued — and the
+    ///      depositor for a withdrawal, whose token movement is what is being deferred.
+    struct Pending {
+        uint32 slot;
+        bool subtract;
+        address payTo;
+        euint64 amount;
+    }
+
+    /// @notice The cap on interactions parked behind one draw. A draw is eight transactions and
+    ///         well under a minute, so this is a very deep queue in practice; the point of the
+    ///         bound is that `_drainQueue` must fit in the settle transaction.
+    uint256 internal constant MAX_QUEUE = 64;
+
+    Pending[] private _queue;
+    mapping(uint32 slot => bool queued) private _slotQueued;
+
     error PoolFull();
     error NoSlot(address account);
     error PeriodTooLong(uint32 periodLength);
     error PeriodZero();
+    error QueueFull();
+    error AlreadyQueued(uint32 slot);
 
     event SlotAssigned(address indexed depositor, uint32 indexed slot);
     event Deposited(address indexed depositor, uint32 indexed slot);
     event Withdrawn(address indexed depositor, uint32 indexed slot);
+    event Queued(address indexed depositor, uint32 indexed slot, bool subtract, uint256 position);
+    event QueueDrained(uint256 count);
 
     constructor(
         IERC7984 token_,
@@ -114,8 +138,7 @@ contract TicketPool is WeightTree {
         euint64 transferred = token.confidentialTransferFrom(msg.sender, address(this), capped);
         FHE.allowThis(transferred);
 
-        uint32 period = currentPeriod();
-        _update(slot, transferred, false, uint32(block.timestamp), period, periodStart(period));
+        _applyOrQueue(slot, transferred, false, address(0));
         _grantLeaf(slot, msg.sender);
 
         emit Deposited(msg.sender, slot);
@@ -144,15 +167,74 @@ contract TicketPool is WeightTree {
 
     function _exit(uint32 slot, euint64 amount) private {
         FHE.allowThis(amount);
-
-        uint32 period = currentPeriod();
-        _update(slot, amount, true, uint32(block.timestamp), period, periodStart(period));
+        _applyOrQueue(slot, amount, true, msg.sender);
         _grantLeaf(slot, msg.sender);
 
-        FHE.allowTransient(amount, address(token));
-        token.confidentialTransfer(msg.sender, amount);
-
         emit Withdrawn(msg.sender, slot);
+    }
+
+    // ---------------------------------------------------------------- queueing
+
+    /// @notice Whether a draw is currently holding the tree still. Always false here; the draw
+    ///         machine that inherits this contract is what makes it true.
+    function drawInFlight() public view virtual returns (bool) {
+        return false;
+    }
+
+    /// @notice How many interactions are parked behind the current draw.
+    function queueLength() external view returns (uint256) {
+        return _queue.length;
+    }
+
+    /// @dev A draw is judged against the tree as it stood at its seal time, so the tree cannot
+    ///      move while one is in flight. Blocking withdrawals for that window would breach the
+    ///      promise that money is available at any time — the whole reason prize-linked saving is
+    ///      not gambling — so interactions are parked instead and executed automatically when the
+    ///      draw settles. The depositor acts once and the transaction lands without them.
+    ///
+    ///      One parked interaction per slot. A second withdrawal would clamp against a balance the
+    ///      first has not yet spent, and two of them together could ask for more than the leaf
+    ///      holds. The bound is on the slot, which is public, so refusing leaks nothing.
+    function _applyOrQueue(uint32 slot, euint64 amount, bool subtract, address payTo) internal {
+        if (!drawInFlight()) {
+            _execute(slot, amount, subtract, payTo);
+            return;
+        }
+
+        if (_queue.length >= MAX_QUEUE) revert QueueFull();
+        if (_slotQueued[slot]) revert AlreadyQueued(slot);
+
+        _slotQueued[slot] = true;
+        _queue.push(Pending({slot: slot, subtract: subtract, payTo: payTo, amount: amount}));
+
+        emit Queued(msg.sender, slot, subtract, _queue.length - 1);
+    }
+
+    /// @dev Executed inside `settle`, in arrival order.
+    function _drainQueue() internal {
+        uint256 n = _queue.length;
+        for (uint256 i = 0; i < n; i++) {
+            Pending memory p = _queue[i];
+            _slotQueued[p.slot] = false;
+            _execute(p.slot, p.amount, p.subtract, p.payTo);
+        }
+        delete _queue;
+        emit QueueDrained(n);
+    }
+
+    /// @dev The leaf is re-granted to its owner on every execution, not only on the call that
+    ///      queued it. `_update` replaces the ciphertexts it touches, and a handle nobody is
+    ///      allowed to decrypt is a balance its owner has lost sight of — the grant has to follow
+    ///      the write, wherever the write happens.
+    function _execute(uint32 slot, euint64 amount, bool subtract, address payTo) private {
+        uint32 period = currentPeriod();
+        _update(slot, amount, subtract, uint32(block.timestamp), period, periodStart(period));
+        _grantLeaf(slot, depositorAt[slot]);
+
+        if (payTo != address(0)) {
+            FHE.allowTransient(amount, address(token));
+            token.confidentialTransfer(payTo, amount);
+        }
     }
 
     function _requireSlot(address account) private view returns (uint32) {
