@@ -8,8 +8,8 @@
       "tx": "0x3f2a604ecd080ed2c19ac1d6a8e7c8fde198485088a562032ef96f6feb241409"
     },
     "DrawMachine": {
-      "address": "0xa4176EcC166e8319dA4B1302aA6706ee5DE9aCd3",
-      "tx": "0x3c6815538c9adab4f8e4aad77c9d4d48121a4b0ebac76e33b307d080a2ad4e24",
+      "address": "0xf008C0626E47F0986460BF740586430bb05E8891",
+      "tx": "0x6b858fae4fe4c99a2d6a7a2432ac3704e4d29fdfda5f1988876ed45e27b98875",
       "args": {
         "token": "0xb98B5e2aa3A74cf1cDB981b3aA35E3B882487f88",
         "arity": 16,

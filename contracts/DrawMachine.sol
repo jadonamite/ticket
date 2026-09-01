@@ -65,6 +65,16 @@ contract DrawMachine is TicketPool {
         address winner;
     }
 
+    /// @notice How long a draw may sit unfinished before anyone may abandon it.
+    ///
+    /// @dev A draw holds the tree still, and an unfinished draw holds it still forever. The KMS is
+    ///      a live service and live services stop: if a published index never comes back, the pool
+    ///      would be frozen with people's money in it and no way out. So a draw that has not
+    ///      settled within this window can be abandoned by anybody, which releases the pool and
+    ///      returns the sponsor's prize. Generously long, because abandoning a draw that was only
+    ///      slow is worse than waiting.
+    uint32 public constant DRAW_TIMEOUT = 6 hours;
+
     /// @notice Whoever may open a draw. Driving one forward is permissionless on purpose: a
     ///         half-finished draw holds the pool, so nobody should be able to strand it.
     address public keeper;
@@ -91,6 +101,7 @@ contract DrawMachine is TicketPool {
     error LeafAlreadyReached(uint256 id);
     error UnknownHandle();
     error ChildOutOfRange(uint8 child);
+    error NotTimedOut(uint256 id, uint32 expiresAt);
 
     event DrawCommitted(
         uint256 indexed id,
@@ -105,6 +116,7 @@ contract DrawMachine is TicketPool {
     event LevelRevealed(uint256 indexed id, uint8 indexed level, uint8 child, uint32 node);
     event DrawSettled(uint256 indexed id, address indexed winner, uint32 winnerSlot, uint64 prize, uint32 participants);
     event PrizeReturned(uint256 indexed id, address indexed sponsor, uint64 prize);
+    event DrawAbandoned(uint256 indexed id, uint8 reachedLevel, address caller);
 
     /// @dev Zero is not a live draw id, so `openDraw == 0` reads as "no draw in flight".
     uint256 public openDraw;
@@ -157,6 +169,11 @@ contract DrawMachine is TicketPool {
     function commitDraw(uint64 prize) external onlyKeeper returns (uint256 id) {
         if (openDraw != 0) revert DrawInFlight(openDraw);
         if (nextSlot == 0) revert EmptyPool();
+        // A draw must be judged against a settled tree. Interactions parked behind the previous
+        // draw have not been applied yet, so opening over them would seal a state that is known
+        // to be wrong.
+        uint256 waiting = queueLength();
+        if (waiting != 0) revert QueueNotDrained(waiting);
 
         id = ++drawCount;
         openDraw = id;
@@ -356,6 +373,42 @@ contract DrawMachine is TicketPool {
         }
 
         emit DrawSettled(id, winner, draw.winnerSlot, draw.prize, nextSlot);
+
+        _drainQueue();
+    }
+
+    /// @notice Release a draw that has stopped making progress, and give the prize back.
+    ///
+    /// @dev Deliberately callable by anyone and deliberately not a keeper privilege. The failure
+    ///      this exists for is the keeper going away, so a rescue only the keeper can perform is
+    ///      not a rescue. It cannot be used to cancel a draw that is merely slow: the window is
+    ///      six hours and a draw takes minutes.
+    ///
+    ///      No winner is paid and none is invented. The draw is recorded as abandoned at whatever
+    ///      level it reached, which is a fact worth keeping on a page that claims verifiability.
+    function abandonDraw(uint256 id) external {
+        if (id == 0 || id > drawCount) revert NoDraw(id);
+        Draw storage draw = _draws[id];
+        if (draw.phase == Phase.None || draw.phase == Phase.Settled) {
+            revert WrongPhase(id, Phase.Prepared, draw.phase);
+        }
+
+        uint32 expiresAt = draw.sealTime + DRAW_TIMEOUT;
+        if (block.timestamp < expiresAt) revert NotTimedOut(id, expiresAt);
+
+        draw.phase = Phase.Settled;
+        draw.winner = address(0);
+        openDraw = 0;
+
+        if (draw.prize > 0) {
+            euint64 prize = FHE.asEuint64(draw.prize);
+            FHE.allowThis(prize);
+            FHE.allowTransient(prize, address(token));
+            token.confidentialTransfer(draw.sponsor, prize);
+            emit PrizeReturned(id, draw.sponsor, draw.prize);
+        }
+
+        emit DrawAbandoned(id, draw.level, msg.sender);
 
         _drainQueue();
     }

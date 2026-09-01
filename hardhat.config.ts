@@ -29,6 +29,11 @@ const config: HardhatUserConfig = {
   etherscan: {
     apiKey: { sepolia: vars.get("ETHERSCAN_API_KEY", "") },
   },
+  // Sepolia tests wait on the relayer and the KMS, which are network round trips measured in
+  // tens of seconds, not the milliseconds Mocha assumes by default.
+  mocha: {
+    timeout: 600000,
+  },
   gasReporter: {
     currency: "USD",
     enabled: process.env.REPORT_GAS ? true : false,

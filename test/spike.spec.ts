@@ -3,6 +3,7 @@ import { FhevmType } from "@fhevm/mock-utils";
 import { ethers, fhevm } from "hardhat";
 
 import type { RoundTrip } from "../types";
+import { expectRejected } from "./helpers/revert";
 
 /**
  * T004–T006. The three round trips the whole build stands on, proven before any product
@@ -59,7 +60,7 @@ describe("spike: FHE round trips", function () {
     const handle = await contract.value();
     const result = await fhevm.publicDecrypt([handle]);
 
-    await expect(contract.finalize([handle], 778n, result.decryptionProof)).to.be.reverted;
+    await expectRejected(contract.finalize([handle], 778n, result.decryptionProof), "forged cleartext");
   });
 
   it("binds the public-decryption proof to the order of the handles", async function () {
@@ -85,6 +86,6 @@ describe("spike: FHE round trips", function () {
     // Reordered against the same proof: rejected.
     const other = await factory.deploy();
     await other.waitForDeployment();
-    await expect(other.finalizePair([hb, ha], 22n, 11n, result.decryptionProof)).to.be.reverted;
+    await expectRejected(other.finalizePair([hb, ha], 22n, 11n, result.decryptionProof), "reordered handles");
   });
 });

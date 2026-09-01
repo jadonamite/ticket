@@ -46,11 +46,24 @@ contract TicketPool is WeightTree {
     }
 
     /// @notice The cap on interactions parked behind one draw. A draw is eight transactions and
-    ///         well under a minute, so this is a very deep queue in practice; the point of the
-    ///         bound is that `_drainQueue` must fit in the settle transaction.
-    uint256 internal constant MAX_QUEUE = 64;
+    ///         well under a minute, so this is a very deep queue in practice.
+    uint256 internal constant MAX_QUEUE = 32;
+
+    /// @notice Parked interactions executed per transaction.
+    ///
+    /// @dev Each one is a full leaf-to-root walk — the benchmark prices it at roughly half a
+    ///      million gas — so draining a full queue inside `settle` would need thirty million and
+    ///      no block would take it. The drain is paged instead: `settle` does the first page and
+    ///      anyone may push the rest through. Settling is not allowed to depend on how many
+    ///      people happened to act while the draw was running.
+    uint256 internal constant DRAIN_PER_TX = 4;
 
     Pending[] private _queue;
+
+    /// @dev Read index into `_queue`. The array is cleared once it is fully drained rather than
+    ///      element by element, so this is what says where the drain has got to.
+    uint256 private _drained;
+
     mapping(uint32 slot => bool queued) private _slotQueued;
 
     error PoolFull();
@@ -59,6 +72,7 @@ contract TicketPool is WeightTree {
     error PeriodZero();
     error QueueFull();
     error AlreadyQueued(uint32 slot);
+    error QueueNotDrained(uint256 remaining);
 
     event SlotAssigned(address indexed depositor, uint32 indexed slot);
     event Deposited(address indexed depositor, uint32 indexed slot);
@@ -181,9 +195,9 @@ contract TicketPool is WeightTree {
         return false;
     }
 
-    /// @notice How many interactions are parked behind the current draw.
-    function queueLength() external view returns (uint256) {
-        return _queue.length;
+    /// @notice How many interactions are still waiting to be executed.
+    function queueLength() public view returns (uint256) {
+        return _queue.length - _drained;
     }
 
     /// @dev A draw is judged against the tree as it stood at its seal time, so the tree cannot
@@ -201,7 +215,7 @@ contract TicketPool is WeightTree {
             return;
         }
 
-        if (_queue.length >= MAX_QUEUE) revert QueueFull();
+        if (queueLength() >= MAX_QUEUE) revert QueueFull();
         if (_slotQueued[slot]) revert AlreadyQueued(slot);
 
         _slotQueued[slot] = true;
@@ -210,16 +224,35 @@ contract TicketPool is WeightTree {
         emit Queued(msg.sender, slot, subtract, _queue.length - 1);
     }
 
-    /// @dev Executed inside `settle`, in arrival order.
-    function _drainQueue() internal {
-        uint256 n = _queue.length;
-        for (uint256 i = 0; i < n; i++) {
+    /// @notice Execute up to `max` parked interactions, in arrival order.
+    ///
+    /// @dev Permissionless on purpose. A parked withdrawal is somebody's money, and whether they
+    ///      get it back must not depend on a keeper choosing to finish its work.
+    function drainQueue(uint256 max) public returns (uint256 executed) {
+        uint256 end = _queue.length;
+        uint256 i = _drained;
+        uint256 stop = i + max;
+        if (stop > end) stop = end;
+
+        for (; i < stop; i++) {
             Pending memory p = _queue[i];
             _slotQueued[p.slot] = false;
             _execute(p.slot, p.amount, p.subtract, p.payTo);
+            executed++;
         }
-        delete _queue;
-        emit QueueDrained(n);
+
+        _drained = i;
+        if (i == end && end != 0) {
+            delete _queue;
+            _drained = 0;
+        }
+
+        emit QueueDrained(executed);
+    }
+
+    /// @dev One page, inside `settle`.
+    function _drainQueue() internal {
+        drainQueue(DRAIN_PER_TX);
     }
 
     /// @dev The leaf is re-granted to its owner on every execution, not only on the call that

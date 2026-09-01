@@ -106,6 +106,62 @@ describe("TicketPool: interactions during a draw", function () {
     await (await f.pool.connect(alice).withdrawAll()).wait();
   });
 
+  it("drains in pages, so settling never depends on how many people acted", async function () {
+    const f = await deployDraw();
+    const actors = f.signers.slice(1, 8);
+
+    for (const who of actors) {
+      await fund(f, who);
+      await deposit(f, who, 100n);
+    }
+    await advance(600);
+
+    const id = await openDraw(f);
+    for (const who of actors) {
+      await (await f.pool.connect(who).withdrawAll()).wait();
+    }
+    expect(await f.pool.queueLength()).to.equal(BigInt(actors.length));
+
+    await finish(f, id);
+
+    // Settle did one page. Each parked interaction is a full leaf-to-root walk, so a settle that
+    // had to do all of them would need more gas than a block will take.
+    expect(await f.pool.queueLength()).to.equal(BigInt(actors.length - 4));
+
+    // And anyone can push the rest through — a parked withdrawal is somebody's money.
+    const [, , , stranger] = f.signers;
+    await (await f.pool.connect(stranger).drainQueue(64)).wait();
+    expect(await f.pool.queueLength()).to.equal(0n);
+
+    for (const who of actors) {
+      expect(await poolBalance(f, who)).to.equal(0n);
+    }
+  });
+
+  it("will not open a draw over a queue that has not drained", async function () {
+    const f = await deployDraw();
+    const actors = f.signers.slice(1, 8);
+    for (const who of actors) {
+      await fund(f, who);
+      await deposit(f, who, 100n);
+    }
+    await advance(600);
+
+    const id = await openDraw(f);
+    for (const who of actors) await (await f.pool.connect(who).withdrawAll()).wait();
+    await finish(f, id);
+
+    // Three interactions are still parked. Sealing the tree now would seal a state already known
+    // to be wrong.
+    await expect(f.pool.connect(f.keeper).commitDraw(0n)).to.be.revertedWithCustomError(
+      f.pool,
+      "QueueNotDrained",
+    );
+
+    await (await f.pool.drainQueue(64)).wait();
+    await (await f.pool.connect(f.keeper).commitDraw(0n)).wait();
+  });
+
   it("does not queue when no draw is in flight", async function () {
     const f = await deployDraw();
     const [, alice] = f.signers;
