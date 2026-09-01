@@ -15,10 +15,14 @@ import type { HardhatUserConfig } from "hardhat/config";
 import { vars } from "hardhat/config";
 
 import "./tasks/accounts";
+import "./tasks/keeper";
 
 // `npx hardhat vars set MNEMONIC` / `SEPOLIA_RPC_URL` / `ETHERSCAN_API_KEY`
 const MNEMONIC: string = vars.get("MNEMONIC", "test test test test test test test test test test test junk");
-const SEPOLIA_RPC_URL: string = vars.get("SEPOLIA_RPC_URL", "https://ethereum-sepolia-rpc.publicnode.com");
+// The environment wins over the stored variable, so a run can be pointed at the retrying local
+// proxy (`node scripts/rpc-proxy.mjs`) without changing anything stored.
+const SEPOLIA_RPC_URL: string =
+  process.env.SEPOLIA_RPC_URL ?? vars.get("SEPOLIA_RPC_URL", "https://ethereum-sepolia-rpc.publicnode.com");
 
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
@@ -47,6 +51,7 @@ const config: HardhatUserConfig = {
       accounts: { mnemonic: MNEMONIC, path: "m/44'/60'/0'/0/", count: 10 },
       chainId: 11155111,
       url: SEPOLIA_RPC_URL,
+      timeout: 120_000,
     },
   },
   paths: {

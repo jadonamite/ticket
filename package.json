@@ -1,6 +1,6 @@
 {
   "name": "ticket",
-  "description": "Confidential prize-linked savings — encrypted time-weighted odds with a publicly verifiable draw",
+  "description": "Confidential prize-linked savings \u2014 encrypted time-weighted odds with a publicly verifiable draw",
   "version": "0.1.0",
   "license": "MIT",
   "engines": {
@@ -47,6 +47,10 @@
     "postcompile": "npm run typechain",
     "deploy:sepolia": "hardhat deploy --network sepolia",
     "verify:sepolia": "hardhat verify --network sepolia",
-    "bench": "cross-env TS_NODE_TRANSPILE_ONLY=true hardhat run bench/run.ts"
+    "bench": "cross-env TS_NODE_TRANSPILE_ONLY=true hardhat run bench/run.ts",
+    "proxy": "node scripts/rpc-proxy.mjs",
+    "test:live": "hardhat test live/draw.live.ts --network sepolia",
+    "keeper": "hardhat ticket:draw --network sepolia",
+    "status": "hardhat ticket:status --network sepolia"
   }
 }

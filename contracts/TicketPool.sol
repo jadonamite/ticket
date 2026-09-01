@@ -237,11 +237,14 @@ contract TicketPool is WeightTree {
         for (; i < stop; i++) {
             Pending memory p = _queue[i];
             _slotQueued[p.slot] = false;
+            // Marked done before it runs, not after. The execution ends in a token transfer, and
+            // an entry that is still marked pending while its transfer is in flight is an entry a
+            // re-entrant call could execute twice.
+            _drained = i + 1;
             _execute(p.slot, p.amount, p.subtract, p.payTo);
             executed++;
         }
 
-        _drained = i;
         if (i == end && end != 0) {
             delete _queue;
             _drained = 0;

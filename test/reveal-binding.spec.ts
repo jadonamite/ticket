@@ -97,7 +97,7 @@ describe("DrawMachine: reveal binding and replay", function () {
 
     await (await f.pool.connect(f.keeper).commitDraw(0n)).wait();
     const id = await f.pool.drawCount();
-    await expect(f.pool.settle(id)).to.be.revertedWithCustomError(f.pool, "WrongPhase");
+    await expect(f.pool.settle(id)).to.be.revertedWithCustomError(f.pool, "DrawNotFinished");
   });
 
   it("cannot settle twice", async function () {

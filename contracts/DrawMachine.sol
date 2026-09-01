@@ -102,6 +102,7 @@ contract DrawMachine is TicketPool {
     error UnknownHandle();
     error ChildOutOfRange(uint8 child);
     error NotTimedOut(uint256 id, uint32 expiresAt);
+    error DrawNotFinished(uint256 id, uint8 level, uint8 levels);
 
     event DrawCommitted(
         uint256 indexed id,
@@ -354,7 +355,7 @@ contract DrawMachine is TicketPool {
     ///      the event records a winner of `address(0)`.
     function settle(uint256 id) external {
         Draw storage draw = _mustBe(id, Phase.Prepared);
-        if (!draw.leafReached) revert WrongPhase(id, Phase.Settled, Phase.Prepared);
+        if (!draw.leafReached) revert DrawNotFinished(id, draw.level, treeDepth);
 
         draw.phase = Phase.Settled;
         openDraw = 0;
