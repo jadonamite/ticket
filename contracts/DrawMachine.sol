@@ -79,6 +79,15 @@ contract DrawMachine is TicketPool {
     ///         half-finished draw holds the pool, so nobody should be able to strand it.
     address public keeper;
 
+    /// @notice The only privilege in the contract: naming the keeper.
+    ///
+    /// @dev Deliberately nothing else. The owner cannot pause the pool, cannot move a deposit,
+    ///      cannot influence a draw and cannot reach the money — a depositor's withdrawal does not
+    ///      depend on anybody's goodwill, which is the only reason a confidential pool is worth
+    ///      trusting. Rotation exists because a keeper key that is lost or leaked would otherwise
+    ///      end the pool's life: no key, no further draws, forever.
+    address public immutable owner;
+
     uint256 public drawCount;
 
     mapping(uint256 id => Draw draw) private _draws;
@@ -94,6 +103,8 @@ contract DrawMachine is TicketPool {
     mapping(uint256 id => euint8 index) private _index;
 
     error NotKeeper(address caller);
+    error NotOwner(address caller);
+    error ZeroKeeper();
     error NoDraw(uint256 id);
     error WrongPhase(uint256 id, Phase expected, Phase actual);
     error DrawInFlight(uint256 id);
@@ -118,6 +129,7 @@ contract DrawMachine is TicketPool {
     event DrawSettled(uint256 indexed id, address indexed winner, uint32 winnerSlot, uint64 prize, uint32 participants);
     event PrizeReturned(uint256 indexed id, address indexed sponsor, uint64 prize);
     event DrawAbandoned(uint256 indexed id, uint8 reachedLevel, address caller);
+    event KeeperChanged(address indexed from, address indexed to);
 
     /// @dev Zero is not a live draw id, so `openDraw == 0` reads as "no draw in flight".
     uint256 public openDraw;
@@ -129,12 +141,25 @@ contract DrawMachine is TicketPool {
         uint32 periodLength_,
         address keeper_
     ) TicketPool(token_, arity_, capacity_, periodLength_) {
+        if (keeper_ == address(0)) revert ZeroKeeper();
         keeper = keeper_;
+        owner = msg.sender;
     }
 
     modifier onlyKeeper() {
         if (msg.sender != keeper) revert NotKeeper(msg.sender);
         _;
+    }
+
+    /// @notice Name a new keeper. Cannot be done while a draw is in flight, so a rotation can
+    ///         never orphan one halfway down the tree.
+    function setKeeper(address keeper_) external {
+        if (msg.sender != owner) revert NotOwner(msg.sender);
+        if (keeper_ == address(0)) revert ZeroKeeper();
+        if (openDraw != 0) revert DrawInFlight(openDraw);
+
+        emit KeeperChanged(keeper, keeper_);
+        keeper = keeper_;
     }
 
     // ------------------------------------------------------------------ views

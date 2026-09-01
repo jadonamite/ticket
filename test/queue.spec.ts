@@ -124,9 +124,10 @@ describe("TicketPool: interactions during a draw", function () {
 
     await finish(f, id);
 
-    // Settle did one page. Each parked interaction is a full leaf-to-root walk, so a settle that
-    // had to do all of them would need more gas than a block will take.
-    expect(await f.pool.queueLength()).to.equal(BigInt(actors.length - 4));
+    // Settle did one page. Each parked interaction is a full leaf-to-root walk — 1.37M gas and
+    // 3.56M HCU on Sepolia — so a settle that had to do all of them would need more than a block
+    // will take.
+    expect(await f.pool.queueLength()).to.equal(BigInt(actors.length - 3));
 
     // And anyone can push the rest through — a parked withdrawal is somebody's money.
     const [, , , stranger] = f.signers;

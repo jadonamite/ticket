@@ -43,6 +43,23 @@ interface Step {
   name: string;
   gas: bigint;
   seconds: number;
+  hcu?: number;
+  depth?: number;
+}
+
+/**
+ * The compute figures come from the coprocessor's own events, which are emitted on Sepolia as
+ * well as on the mock — so the sizing that chose arity 16 can be checked against the real thing
+ * rather than only against a simulation. Guarded, because it is the plugin's mock utility and it
+ * is entitled to refuse.
+ */
+function hcuOf(fhevmApi: any, receipt: any): { hcu?: number; depth?: number } {
+  try {
+    const info = fhevmApi.computeTransactionHCU(receipt);
+    return { hcu: info.globalHCU, depth: info.maxHCUDepth };
+  } catch {
+    return {};
+  }
 }
 
 describe("live: a draw on Sepolia", function () {
@@ -69,8 +86,12 @@ describe("live: a draw on Sepolia", function () {
       const at = Date.now();
       const receipt = await (await send()).wait();
       const seconds = (Date.now() - at) / 1000;
-      steps.push({ name, gas: receipt.gasUsed, seconds });
-      console.log(`  ${name.padEnd(18)} ${receipt.gasUsed.toString().padStart(9)} gas   ${seconds.toFixed(1)}s`);
+      const compute = hcuOf(fhevm, receipt);
+      steps.push({ name, gas: receipt.gasUsed, seconds, ...compute });
+      const hcuText = compute.hcu === undefined ? "" : `   ${compute.hcu.toLocaleString()} HCU`;
+      console.log(
+        `  ${name.padEnd(18)} ${receipt.gasUsed.toString().padStart(9)} gas   ${seconds.toFixed(1)}s${hcuText}`,
+      );
       return receipt;
     };
 
@@ -161,9 +182,13 @@ describe("live: a draw on Sepolia", function () {
       `The whole draw took **${drawSeconds.toFixed(1)}s** and **${drawGas.toString()} gas** across`,
       `${1 + 2 * depth + 1} transactions and ${depth} KMS round trips.`,
       "",
-      "| step | gas | seconds |",
-      "|---|---:|---:|",
-      ...steps.map((s) => `| ${s.name} | ${s.gas === 0n ? "—" : s.gas.toString()} | ${s.seconds.toFixed(1)} |`),
+      "| step | gas | seconds | global HCU | depth |",
+      "|---|---:|---:|---:|---:|",
+      ...steps.map(
+        (s) =>
+          `| ${s.name} | ${s.gas === 0n ? "—" : s.gas.toString()} | ${s.seconds.toFixed(1)} | ` +
+          `${s.hcu?.toLocaleString() ?? "—"} | ${s.depth?.toLocaleString() ?? "—"} |`,
+      ),
       "",
     ];
     writeFileSync("bench/LIVE.md", lines.join("\n"));

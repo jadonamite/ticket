@@ -68,8 +68,31 @@ The two per-transaction ceilings are 20,000,000 global HCU and 5,000,000 sequent
   additions deep and reverts outright at k=16. The scan is log₂(k) deep for k·log₂(k) additions —
   it trades total work, which is slack at 73.4%, for depth, which is not at 77.3%.
 
-Arity 16 with capacity 4,096 is therefore a measurement, not a guess, and `deploy/params.ts`
+Arity 16 with capacity 4,096 is therefore a measurement, not a guess, and `config/params.ts`
 records the fallback if that 22.7% depth headroom ever closes.
+
+**Confirmed on Sepolia, Sep 1** (`bench/LIVE.md`, a complete draw on the deployed contracts, not a
+simulation). The mock predicted the selection step at 73.4% of the global ceiling; the live
+transaction came in at **14,650,024 HCU — 73.3%**. The sizing transferred, which is the only thing
+that makes the arity choice worth anything.
+
+| step | gas | HCU | seconds |
+|---|---:|---:|---:|
+| deposit | 1,372,609 | 3,561,480 | 30.8 |
+| commitDraw (seals the root's children) | 1,701,473 | 8,457,024 | 10.3 |
+| selectLevel, root | 2,071,064 | 14,650,024 | 9.5 |
+| KMS round trip | — | — | 7.1–20.4 |
+| revealLevel (descends and seals the next level) | 1,552,983 | 8,432,960 | 24.2 |
+| settle | 43,965 | 0 | 12.0 |
+
+**A whole draw is 11,469,965 gas and 175 seconds**, over eight transactions and three KMS round
+trips, and neither figure moves with the number of depositors.
+
+Two things the live run changed. A deposit costs **2.5× what the mock priced it at** — 1.37M gas
+against 0.51M — which is why the queue drains three parked interactions per transaction rather
+than four: four would sit at 71% of the compute ceiling before the payout is added. And the
+KMS round trip is **7 to 20 seconds** and the transactions are 10 to 25 each, so the draw screen
+is not decoration. Three minutes of visible, explained progress is the product.
 
 Revealing a winner requires a decryption round trip **per level** of that structure, and the
 per-transaction compute ceiling splits each level in two. A draw is therefore a **bounded
@@ -108,7 +131,7 @@ that quietly means less than the reader assumes is worse than one that is smalle
 
 | Party | Can | Cannot |
 |---|---|---|
-| **Contract author / operator** | Trigger draws, fund prizes | Read any depositor balance or time-weight; influence the random source; select the winner |
+| **Contract author / operator** | Trigger draws, fund prizes, name a new keeper | Read any depositor balance or time-weight; influence the random source; select the winner; pause the pool; reach a deposit |
 | **Depositor** | Read their own balance; deposit and withdraw freely | Read anyone else's; predict the draw; gain odds by depositing late |
 | **Chain observer** | See the winner, the prize, the number of participants, and every fairness check | Recover any balance or time-weight from state, events or public inputs |
 | **Threshold key network** | Decrypt, collectively | — and this is the trust assumption, stated: "nobody can see your balance" means "no single party can" |
@@ -123,3 +146,8 @@ that quietly means less than the reader assumes is worse than one that is smalle
   genuinely no-loss when the prize comes from real yield. The interface says which one it is.
 - **Amounts are hidden; addresses are not.** Ticket is not an anonymity system and does not
   market itself as one.
+- **A draw depends on a live service.** The KMS answering is not guaranteed, and a draw holds the
+  weight tree still while it runs. So a draw that stops making progress can be abandoned by
+  anybody after six hours, which releases the pool and returns the prize. Withdrawals never
+  depend on the keeper: an interaction that arrives mid-draw is parked and executed at settle,
+  and anybody can push the queue through.

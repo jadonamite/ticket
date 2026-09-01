@@ -51,12 +51,17 @@ contract TicketPool is WeightTree {
 
     /// @notice Parked interactions executed per transaction.
     ///
-    /// @dev Each one is a full leaf-to-root walk — the benchmark prices it at roughly half a
-    ///      million gas — so draining a full queue inside `settle` would need thirty million and
-    ///      no block would take it. The drain is paged instead: `settle` does the first page and
-    ///      anyone may push the rest through. Settling is not allowed to depend on how many
-    ///      people happened to act while the draw was running.
-    uint256 internal constant DRAIN_PER_TX = 4;
+    /// @dev Each one is a full leaf-to-root walk, so draining a full queue inside `settle` would
+    ///      need far more than a block will take. The drain is paged instead: `settle` does the
+    ///      first page and anyone may push the rest through. Settling is not allowed to depend on
+    ///      how many people happened to act while the draw was running.
+    ///
+    ///      Three, from the live measurement rather than the mock's. On Sepolia a deposit costs
+    ///      1,372,609 gas and 3,561,480 HCU — two and a half times what the mock priced it at —
+    ///      so four would sit at 71% of the 20M compute ceiling before the payout is added, and a
+    ///      page that reverts under load is worse than a page that is one shorter.
+    ///      See `bench/LIVE.md`.
+    uint256 internal constant DRAIN_PER_TX = 3;
 
     Pending[] private _queue;
 

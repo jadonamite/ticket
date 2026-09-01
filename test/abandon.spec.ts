@@ -81,3 +81,71 @@ describe("DrawMachine: abandoning a stalled draw", function () {
     await expect(f.pool.abandonDraw(99)).to.be.revertedWithCustomError(f.pool, "NoDraw");
   });
 });
+
+/**
+ * The only privilege in the contract.
+ *
+ * A keeper key that is lost or leaked would otherwise end the pool's life — no key, no further
+ * draws, forever — so it can be rotated. It is worth being precise about what that power is and
+ * is not: the owner names the keeper and does nothing else. No pause, no access to a deposit, no
+ * influence over a draw. A withdrawal never depends on anybody's goodwill, which is the only
+ * reason a pool that hides its balances is worth trusting with money.
+ */
+describe("DrawMachine: rotating the keeper", function () {
+  it("lets the owner name a new keeper, and nobody else", async function () {
+    const f = await deployDraw();
+    const [owner, alice, next] = f.signers;
+
+    await expect(f.pool.connect(alice).setKeeper(alice.address)).to.be.revertedWithCustomError(
+      f.pool,
+      "NotOwner",
+    );
+
+    await (await f.pool.connect(owner).setKeeper(next.address)).wait();
+    expect(await f.pool.keeper()).to.equal(next.address);
+
+    await fund(f, alice);
+    await deposit(f, alice, 100n);
+    await expect(f.pool.connect(owner).commitDraw(0n)).to.be.revertedWithCustomError(f.pool, "NotKeeper");
+    await (await f.pool.connect(next).commitDraw(0n)).wait();
+  });
+
+  it("will not rotate mid-draw, and will not name nobody", async function () {
+    const f = await deployDraw();
+    const [owner, alice, next] = f.signers;
+
+    await expect(f.pool.connect(owner).setKeeper(ethers.ZeroAddress)).to.be.revertedWithCustomError(
+      f.pool,
+      "ZeroKeeper",
+    );
+
+    await fund(f, alice);
+    await deposit(f, alice, 100n);
+    await (await f.pool.connect(f.keeper).commitDraw(0n)).wait();
+
+    // A rotation halfway down the tree would orphan the descent.
+    await expect(f.pool.connect(owner).setKeeper(next.address)).to.be.revertedWithCustomError(
+      f.pool,
+      "DrawInFlight",
+    );
+  });
+
+  it("gives the owner no power over the money", async function () {
+    const f = await deployDraw();
+    const [owner, alice] = f.signers;
+    await fund(f, alice);
+    await deposit(f, alice, 500n);
+
+    // There is no function to find. The surface is one setter, and this is the assertion that
+    // keeps it that way as the contract grows.
+    const privileged = f.pool.interface.fragments
+      .filter((fragment: any) => fragment.type === "function")
+      .map((fragment: any) => fragment.name)
+      .filter((name: string) => /pause|rescue|sweep|withdrawFrom|setOwner|transferOwnership|emergency/i.test(name));
+    expect(privileged).to.deep.equal([]);
+
+    // And the owner cannot take Alice's stake by any route the pool exposes.
+    await expect(f.pool.connect(owner).withdrawAll()).to.be.revertedWithCustomError(f.pool, "NoSlot");
+    expect(await poolBalance(f, alice)).to.equal(500n);
+  });
+});
