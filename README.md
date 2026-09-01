@@ -144,8 +144,19 @@ for tokens.
 | `bench/` | Published *N → operations → time → gas* benchmark, and the live draw |
 | `tasks/` | Keeper and the late-whale demonstration |
 | `config/` | Arity, capacity and period, with the measurements that fixed them |
-| `docs/` | Architecture, cryptographic construction, threat model |
+| `docs/` | Architecture, the draw, security model, operations, testing |
 | `PRD.md` | What the product is and who it is for |
+
+## Documentation
+
+| | |
+|---|---|
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | The four constraints and what each one forced |
+| [`docs/DRAW.md`](docs/DRAW.md) | How a winner is picked without reading a balance — the arithmetic, the transaction sequence, the invariants |
+| [`docs/SECURITY.md`](docs/SECURITY.md) | Trust boundaries, the attack the reveal step stops, and what is *not* claimed |
+| [`docs/OPERATIONS.md`](docs/OPERATIONS.md) | Deploy, run a draw, rescue a stuck one, rotate a keeper |
+| [`docs/TESTING.md`](docs/TESTING.md) | What each suite proves, and what is not tested |
+| [`bench/RESULTS.md`](bench/RESULTS.md) · [`bench/LIVE.md`](bench/LIVE.md) | Cost against N, and one complete draw on Sepolia |
 
 Requirements and success criteria: `../../specs/ticket/spec.md`.
 

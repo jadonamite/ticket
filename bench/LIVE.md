@@ -2,6 +2,11 @@
 
 Pool `0xfed4a998664395b41894f44b87F5390E198154e2` · token `0xb98B5e2aa3A74cf1cDB981b3aA35E3B882487f88` · draw 1 · 2026-09-01T07:04:13.700Z
 
+> **Provenance.** This run was driven against the pool deployed at that commit. The current
+> deployment adds `sealWeight` / `sealedWeightOf`, which a depositor uses to read their own
+> time-weight; nothing on the draw path changed, so every figure below still applies. The
+> addresses in use are always the ones in `deployments/sepolia.json`.
+
 Winner `0xF64915f951Ef8a8307783B7feF702F856aDc01eB`, slot 0, descent path [0, 0, 0].
 The whole draw took **180.4s** and **11351809 gas** across
 8 transactions and 3 KMS round trips.

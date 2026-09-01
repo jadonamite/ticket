@@ -109,7 +109,6 @@ contract DrawMachine is TicketPool {
     error WrongPhase(uint256 id, Phase expected, Phase actual);
     error DrawInFlight(uint256 id);
     error EmptyPool();
-    error LeafAlreadyReached(uint256 id);
     error UnknownHandle();
     error ChildOutOfRange(uint8 child);
     error NotTimedOut(uint256 id, uint32 expiresAt);
