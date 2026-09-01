@@ -35,3 +35,41 @@ the submission form. I'd rather ask than assume.
 Thank you,
 
 Jadon
+
+---
+
+## Operational note — Sep 1, 2026: the relayer's decrypt endpoints returned 500 for hours
+
+Both `POST /v2/user-decrypt` and `POST /v2/public-decrypt` on
+`relayer.testnet.zama.org` answered every request with
+
+```
+500  Transaction simulation failed: Execution reverted: execution reverted
+```
+
+while `GET /v2/keyurl` stayed healthy and the chain was fine. This was confirmed to be
+service-side rather than ours by three independent checks:
+
+1. The **spike** contract — four tests that passed on Sepolia earlier the same day, unchanged —
+   failed on both decryption paths.
+2. The **ACL contract itself** reported `isAllowed(handle, user) == true` and
+   `isAllowed(handle, pool) == true` for the exact handles the relayer refused.
+3. It failed identically for two different accounts and two different pool deployments.
+
+`live/decrypt.live.ts` is the check that establishes this in about ten seconds.
+
+**Questions for developer@zama.org, alongside the ones above:**
+
+- Is there a status page or a documented health endpoint for the relayer? `GET /v2/keyurl`
+  returning 200 while both decrypt endpoints return 500 is not a useful signal.
+- What is the intended client behaviour during such an outage — is the request queued, or must
+  it be resubmitted?
+- Is there a rate limit on user decryption per account, and does exceeding it surface as this
+  same 500?
+
+**What it changes in the build.** Nothing structural, and that is worth saying: the design
+already assumes this service can stop. A draw that stalls mid-descent can be abandoned by anyone
+after six hours, which releases the pool and returns the prize, and withdrawals never wait on it.
+What the outage does confirm is that the draw screen must name the thing it is waiting for —
+"waiting on the decryption network" — rather than show a spinner. A judge who hits this during
+review should be able to tell a stalled service from a broken product.

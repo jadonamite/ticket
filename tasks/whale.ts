@@ -81,11 +81,33 @@ task("ticket:whale", "Show that a late deposit buys almost no odds")
       return stamp(await (await pool.connect(who).deposit(enc.handles[0], enc.inputProof)).wait());
     };
 
+    const ZERO_HANDLE = "0x" + "00".repeat(32);
+
     const seal = async (who: any) => {
       const receipt = await (await pool.connect(who).sealWeight()).wait();
-      const handle = await pool.sealedWeightOf(who.address);
-      const weight = await hre.fhevm.userDecryptEuint(FhevmType.euint64, handle, poolAddress, who);
-      return { weight, at: await stamp(receipt) };
+
+      // The handle has to be read back from a node that has actually seen the block it was
+      // written in. A public endpoint that is one block behind answers with a zero handle, which
+      // is indistinguishable from a genuine zero until the decryption reverts.
+      let handle = ZERO_HANDLE;
+      for (let attempt = 0; attempt < 20 && handle === ZERO_HANDLE; attempt++) {
+        if (attempt > 0) await new Promise((r) => setTimeout(r, 3_000));
+        handle = await pool.sealedWeightOf(who.address);
+      }
+      if (handle === ZERO_HANDLE) throw new Error(`no sealed weight for ${who.address}`);
+
+      let weight: bigint | undefined;
+      for (let attempt = 0; attempt < 8 && weight === undefined; attempt++) {
+        try {
+          weight = await hre.fhevm.userDecryptEuint(FhevmType.euint64, handle, poolAddress, who);
+        } catch (error) {
+          if (attempt === 7) throw error;
+          console.log(`  decrypt: attempt ${attempt + 1} failed, retrying`);
+          await new Promise((r) => setTimeout(r, 5_000));
+        }
+      }
+
+      return { weight: weight!, at: await stamp(receipt) };
     };
 
     const wait = async (seconds: number) => {

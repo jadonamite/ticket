@@ -73,10 +73,12 @@ async function forward(body) {
       // whereas a real `execution reverted` must be handed back untouched, because the caller is
       // entitled to the revert data.
       if (isProviderRefusal(text)) throw new Error(`${upstream} refused: ${text.slice(0, 120)}`);
-      if (attempt > 0) {
-        retried++;
-        cursor = (cursor + attempt) % UPSTREAMS.length;
-      }
+      if (attempt > 0) retried++;
+      // The cursor deliberately does not move. Two independent nodes are not at the same block
+      // height, so drifting onto a fallback after one bad socket turns every later read into a
+      // possible read-behind-write — a value written a second ago comes back as zero, and the
+      // caller has no way to tell that from the value genuinely being zero. Failover is for the
+      // one request that failed, not for the session.
       return text;
     } catch (error) {
       last = error;
