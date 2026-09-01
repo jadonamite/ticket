@@ -64,6 +64,8 @@ task("ticket:draw", "Open a draw and drive it to settlement, or resume one alrea
   .addOptionalParam("prize", "Prize in base units, pulled from the keeper", "0", types.string)
   .addOptionalParam("deployment", "Path to the deployment record", "deployments/sepolia.json", types.string)
   .setAction(async (args, hre) => {
+    await hre.fhevm.initializeCLIApi();
+
     const record = deployment(args.deployment);
     const address = record.contracts.DrawMachine.address;
     const pool = await hre.ethers.getContractAt("DrawMachine", address);

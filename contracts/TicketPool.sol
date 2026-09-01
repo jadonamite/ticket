@@ -30,6 +30,10 @@ contract TicketPool is WeightTree {
     mapping(address depositor => bool assigned) private _hasSlot;
     mapping(uint32 slot => address depositor) public depositorAt;
 
+    /// @dev The last weight each depositor sealed for themselves. Written by `sealWeight`, read
+    ///      by nobody else — a weight is as private as the balance it is computed from.
+    mapping(address account => euint64 weight) private _sealedWeight;
+
     /// @notice Slots are assigned once and never reused, so this only ever climbs.
     uint32 public nextSlot;
 
@@ -82,6 +86,7 @@ contract TicketPool is WeightTree {
     event SlotAssigned(address indexed depositor, uint32 indexed slot);
     event Deposited(address indexed depositor, uint32 indexed slot);
     event Withdrawn(address indexed depositor, uint32 indexed slot);
+    event WeightSealed(address indexed depositor, uint32 indexed slot, uint32 at);
     event Queued(address indexed depositor, uint32 indexed slot, bool subtract, uint256 position);
     event QueueDrained(uint256 count);
 
@@ -304,6 +309,33 @@ contract TicketPool is WeightTree {
     function confidentialWeightOf(address account) external view returns (euint64) {
         (, euint64 accrued) = _balanceOf(_slotOf[account]);
         return accrued;
+    }
+
+    /// @notice Seal the caller's own weight at this instant and grant it to them.
+    ///
+    /// @dev The pair of handles above is the cheap path — two reads and one multiplication the
+    ///      owner finishes in the clear. This is the exact path, and it has to be a transaction
+    ///      rather than a view because sealing is arithmetic on ciphertexts and arithmetic on
+    ///      ciphertexts writes.
+    ///
+    ///      It seals a *leaf*, never an internal node. A leaf is one depositor and discloses only
+    ///      what that depositor already knows; an internal node is a sum over other people, and
+    ///      the only internal value this contract ever lets out is the child index of a draw.
+    function sealWeight() external returns (euint64) {
+        uint32 slot = _requireSlot(msg.sender);
+        uint32 period = currentPeriod();
+
+        euint64 weight = _sealed(leafOffset + slot, uint32(block.timestamp), period, periodStart(period));
+        FHE.allow(weight, msg.sender);
+        _sealedWeight[msg.sender] = weight;
+
+        emit WeightSealed(msg.sender, slot, uint32(block.timestamp));
+        return weight;
+    }
+
+    /// @notice The handle from the caller's last `sealWeight`, to decrypt under EIP-712.
+    function sealedWeightOf(address account) external view returns (euint64) {
+        return _sealedWeight[account];
     }
 
     /// @notice When this depositor's leaf last moved, and in which period.

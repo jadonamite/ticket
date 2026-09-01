@@ -16,6 +16,7 @@ import { vars } from "hardhat/config";
 
 import "./tasks/accounts";
 import "./tasks/keeper";
+import "./tasks/whale";
 
 // `npx hardhat vars set MNEMONIC` / `SEPOLIA_RPC_URL` / `ETHERSCAN_API_KEY`
 const MNEMONIC: string = vars.get("MNEMONIC", "test test test test test test test test test test test junk");
