@@ -82,13 +82,68 @@ winner follows from the committed inputs — while every balance behind it stays
 | **Checkable** | every draw verifiable by anyone, in one click |
 | **Free to leave** | no lock-up, no notice period |
 
+## Running it
+
+Node 20 or newer, and nothing else. A clean checkout tests itself with no configuration: the
+suite runs against the FHEVM mock, which enforces the real per-transaction compute ceilings.
+
+```bash
+npm install
+npx hardhat test
+```
+
+For Sepolia, three encrypted variables — they are stored by Hardhat, not in a file:
+
+```bash
+npx hardhat vars set MNEMONIC          # account 0 deploys, account 1 keeps
+npx hardhat vars set SEPOLIA_RPC_URL   # optional, defaults to a public endpoint
+npx hardhat vars set ETHERSCAN_API_KEY # only for `npm run verify:sepolia`
+```
+
+Fund both accounts from a Sepolia faucet — `npx hardhat run scripts/fund-check.ts --network
+sepolia` prints the addresses and what they hold — then:
+
+```bash
+npm run deploy:sepolia          # token and pool, addresses recorded in deployments/
+npm run status                  # pool state, open draw, queue depth
+npm run keeper                  # open a draw and drive it to settlement
+npm run test:live               # a complete draw, timed and priced, into bench/LIVE.md
+npx hardhat ticket:whale --hold 600 --network sepolia   # the late whale, into docs/WHALE.md
+```
+
+`ticket:draw` reads the draw's phase off the contract and does what that phase needs next, so a
+run interrupted halfway down the tree is resumed by running it again rather than restarted.
+
+If the public RPC endpoints drop sockets under load — several hundred calls go out per draw —
+put the retrying proxy in front of them:
+
+```bash
+npm run proxy                                    # 127.0.0.1:8547, in its own terminal
+SEPOLIA_RPC_URL=http://127.0.0.1:8547 npm run keeper
+```
+
+### Deployed
+
+| | Sepolia |
+|---|---|
+| pool | `0xfc320bE0eb6876AE29899e4FbbEEb7C0e36b8105` |
+| demo token | `0xb98B5e2aa3A74cf1cDB981b3aA35E3B882487f88` |
+
+Arity 16 over 4,096 leaves, three levels, one-hour draw periods. The demo token is faucet-mintable
+by anybody: `claim()` gives 1,000 units, once an hour, so this can be tried without asking anyone
+for tokens.
+
 ## Repository
 
 | Path | Holds |
 |---|---|
-| `contracts/` | Pool, encrypted time-weighting, draw, verification |
+| `contracts/` | Pool, encrypted time-weighting, draw machine |
 | `app/` | Deposit, withdraw, draw view, Verify Draw |
-| `bench/` | Published *N → operations → time → gas* benchmark |
+| `test/` | The mock suite — principal, privacy, reveal binding, soak |
+| `live/` | The same claims against Sepolia's real relayer and KMS |
+| `bench/` | Published *N → operations → time → gas* benchmark, and the live draw |
+| `tasks/` | Keeper and the late-whale demonstration |
+| `config/` | Arity, capacity and period, with the measurements that fixed them |
 | `docs/` | Architecture, cryptographic construction, threat model |
 | `PRD.md` | What the product is and who it is for |
 
