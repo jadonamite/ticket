@@ -72,20 +72,32 @@ Arity 16 with capacity 4,096 is therefore a measurement, not a guess, and `confi
 records the fallback if that 22.7% depth headroom ever closes.
 
 **Confirmed on Sepolia, Sep 1** (`bench/LIVE.md`, a complete draw on the deployed contracts, not a
-simulation). The mock predicted the selection step at 73.4% of the global ceiling; the live
-transaction came in at **14,650,024 HCU — 73.3%**. The sizing transferred, which is the only thing
-that makes the arity choice worth anything.
+simulation). Both predictions landed on the nose:
 
-| step | gas | HCU | seconds |
-|---|---:|---:|---:|
-| deposit | 1,372,609 | 3,561,480 | 30.8 |
-| commitDraw (seals the root's children) | 1,701,473 | 8,457,024 | 10.3 |
-| selectLevel, root | 2,071,064 | 14,650,024 | 9.5 |
-| KMS round trip | — | — | 7.1–20.4 |
-| revealLevel (descends and seals the next level) | 1,552,983 | 8,432,960 | 24.2 |
-| settle | 43,965 | 0 | 12.0 |
+| | mock, Aug 26 | Sepolia, Sep 1 |
+|---|---:|---:|
+| selection, global HCU | 14,674,088 (73.4%) | **14,650,024 (73.3%)** |
+| selection, sequential depth | 3,864,064 (77.3%) | **3,864,064 (77.3%)** |
 
-**A whole draw is 11,469,965 gas and 175 seconds**, over eight transactions and three KMS round
+The depth figure — the ceiling that actually binds, and the one that made the level split into two
+transactions and the prefix sum into a scan — is identical to the digit. The sizing transferred,
+which is the only thing that makes the arity choice worth anything.
+
+| step | gas | global HCU | depth | seconds |
+|---|---:|---:|---:|---:|
+| deposit | 1,372,633 | 3,561,480 | 588,032 | 20.1 |
+| commitDraw (seals the root's children) | 1,701,499 | 8,457,024 | 527,032 | 12.8 |
+| selectLevel, root | 2,071,064 | 14,650,024 | 3,864,064 | 23.1 |
+| KMS round trip | — | — | — | 8.8–11.8 |
+| revealLevel (descends and seals the next level) | 1,552,979 | 8,432,960 | 527,032 | 12.8 |
+| selectLevel, below the root | 2,017,885 | 12,963,992 | 1,715,064 | 24.2 |
+| settle | 43,921 | 0 | 0 | 11.1 |
+
+Only the root's selection carries the `euint128` multiply, which is why the levels below it sit at
+1,715,064 depth rather than 3,864,064 — the one expensive operation in the design is spent once
+and the rest of the descent is comparatively cheap.
+
+**A whole draw is 11,351,809 gas and 180 seconds**, over eight transactions and three KMS round
 trips, and neither figure moves with the number of depositors.
 
 Two things the live run changed. A deposit costs **2.5× what the mock priced it at** — 1.37M gas
