@@ -3,7 +3,7 @@
 What is proven, where, and what would have to be true for it to be wrong.
 
 ```bash
-npx hardhat test                     # 56 tests on the FHEVM mock, ~40s
+npx hardhat test                     # 60 tests on the FHEVM mock, ~10s
 npx hardhat test --network sepolia   # the same suite against real infrastructure
 npx hardhat test live/draw.live.ts --network sepolia    # a complete draw, on the deployed pool
 ```
@@ -41,7 +41,16 @@ Two depositors, a full descent, one winner paid, both principals intact — at t
 again at the production 16-wide, 4,096-leaf shape. Also: the descent path reconstructs the
 winner's slot in base `arity`; an empty leaf is never selected; a second draw cannot open while
 one is in flight; only the keeper may open one but anyone may push it forward; a pool with no
-surviving weight returns the prize rather than inventing a winner.
+surviving weight returns the prize rather than inventing a winner; and — the regression for the
+Sep 4 fix — a sponsor who asks for more prize than their real balance covers moves *zero*, not a
+partial amount, so an underfunded prize can never come out of depositor principal.
+
+### `test/reward.spec.ts` — paying strangers to advance a draw
+Every step after `commitDraw` is already permissionless; this covers whether it's worth doing.
+A stranger with no deposit and no keeper role gets paid exactly `rewardPerStep` for each
+`selectLevel`/`revealLevel`/`settle` call, out of a bounty the keeper funded at `commitDraw`;
+funding nothing changes nothing (old behavior, exactly); and an abandoned draw refunds whatever
+slice of the bounty was never paid out back to the sponsor rather than stranding it.
 
 ### `test/reveal-binding.spec.ts` — the attack surface
 The reveal is the only place an outside value enters the draw. Covers a foreign handle, a padded

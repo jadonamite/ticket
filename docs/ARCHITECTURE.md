@@ -86,12 +86,16 @@ which is the only thing that makes the arity choice worth anything.
 | step | gas | global HCU | depth | seconds |
 |---|---:|---:|---:|---:|
 | deposit | 1,372,633 | 3,561,480 | 588,032 | 20.1 |
-| commitDraw (seals the root's children) | 1,701,499 | 8,457,024 | 527,032 | 12.8 |
+| commitDraw (seals the root's children)¹ | 1,701,499 | 8,457,024 | 527,032 | 12.8 |
 | selectLevel, root | 2,071,064 | 14,650,024 | 3,864,064 | 23.1 |
 | KMS round trip | — | — | — | 8.8–11.8 |
 | revealLevel (descends and seals the next level) | 1,552,979 | 8,432,960 | 527,032 | 12.8 |
 | selectLevel, below the root | 2,017,885 | 12,963,992 | 1,715,064 | 24.2 |
 | settle | 43,921 | 0 | 0 | 11.1 |
+
+¹ Measured before the Sep 4 fix that made the prize an encrypted argument instead of a plaintext
+one (`docs/SECURITY.md` §2). `commitDraw` now also encrypts and proves the prize inline, so its
+gas line above no longer reflects the current contract; every other row is unaffected.
 
 Only the root's selection carries the `euint128` multiply, which is why the levels below it sit at
 1,715,064 depth rather than 3,864,064 — the one expensive operation in the design is spent once
@@ -145,7 +149,7 @@ that quietly means less than the reader assumes is worse than one that is smalle
 |---|---|---|
 | **Contract author / operator** | Trigger draws, fund prizes, name a new keeper | Read any depositor balance or time-weight; influence the random source; select the winner; pause the pool; reach a deposit |
 | **Depositor** | Read their own balance; deposit and withdraw freely | Read anyone else's; predict the draw; gain odds by depositing late |
-| **Chain observer** | See the winner, the prize, the number of participants, and every fairness check | Recover any balance or time-weight from state, events or public inputs |
+| **Chain observer** | See the winner, the number of participants, and every fairness check | Recover any balance, time-weight, or prize amount from state, events or public inputs |
 | **Threshold key network** | Decrypt, collectively | — and this is the trust assumption, stated: "nobody can see your balance" means "no single party can" |
 
 ## Where it is thin, said plainly

@@ -13,7 +13,7 @@ if it stopped being true.
 | **Owner** (deployer) | Name a new keeper | Read any balance or weight · pause the pool · touch a deposit · influence a draw · take a prize |
 | **Keeper** | Open a draw and fund its prize | Everything in the right-hand column above, plus: choose a winner, stop a withdrawal, or strand a draw |
 | **Depositor** | Deposit, withdraw at any time, read *their own* balance and weight | Read anyone else's · predict a draw · buy odds by depositing late |
-| **Chain observer** | See the winner, the prize, the participant count, and every fairness check | Recover any balance, weight or total from state, events or calldata |
+| **Chain observer** | See the winner, the participant count, and every fairness check | Recover any balance, weight, total, or prize amount from state, events or calldata |
 | **Coprocessor / KMS** | Decrypt, collectively | — this is the trust assumption, stated in §6 |
 
 The owner's power is one function, `setKeeper`, and it cannot be used while a draw is in flight.
@@ -28,7 +28,9 @@ descent took, a `uint8`. Three per draw at depth 3.
 
 Public decryption is **permanent** — a value decrypted publicly is public forever — which is why
 the rule is stated as a count rather than a policy. Never a balance. Never a total. Never a
-losing entry. Never an internal node of the tree.
+losing entry. Never an internal node of the tree. Never the prize amount — `commitDraw` takes it
+encrypted, the same way `deposit` takes a balance, so there is no plaintext figure anywhere for a
+sponsor's declared prize to disagree with what the token actually escrowed.
 
 A depositor's own balance and weight are granted to their address alone, and read by them
 client-side under EIP-712. `test/privacy.spec.ts` asserts that neither can be publicly decrypted

@@ -13,7 +13,7 @@ a test that passes there is not passing on a toy.
 
 ```bash
 npm install
-npx hardhat test          # 56 tests, about 40 seconds
+npx hardhat test          # 60 tests, about 10 seconds
 ```
 
 ## 2. Configuration
@@ -69,7 +69,7 @@ npm run verify:sepolia -- <pool address> <token address> 16 4096 3600 <keeper ad
 
 ```bash
 npm run status                      # pool state, open draw, queue depth
-npx hardhat ticket:draw --prize 1000 --network sepolia
+npx hardhat ticket:draw --prize 1000 --reward 0 --network sepolia
 ```
 
 `ticket:draw` reads the draw's phase off the contract and does whatever that phase needs next, so
@@ -77,9 +77,15 @@ it is **resumable rather than transactional**. If it crashes at level two, run i
 picks up at level two. It drains any parked queue before opening, and drains what accumulates
 after settling.
 
-The prize is pulled from the keeper's own token balance, so the keeper must hold the demo token
-and have made the pool an operator. A prize of `0` runs a draw with no payout, which is the right
-thing when all you want is to exercise the machinery.
+The prize is pulled from the keeper's own token balance (encrypted before it reaches the
+contract — see `docs/SECURITY.md` §2), so the keeper must hold the demo token and have made the
+pool an operator. A prize of `0` runs a draw with no payout, which is the right thing when all you
+want is to exercise the machinery.
+
+`--reward` is separate and optional: plain wei, split evenly over the draw's remaining
+permissionless steps and paid to whoever actually calls each one. `0` (the default) reproduces the
+old behavior — nothing paid, nothing changed. It exists to make it worth a stranger's time to
+advance a draw the keeper script isn't currently driving.
 
 Expect about **three minutes**: eight transactions at 10–25 seconds each and three KMS round trips
 at 7–20 seconds each.

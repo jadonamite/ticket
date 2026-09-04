@@ -6,6 +6,14 @@ Pool `0xfed4a998664395b41894f44b87F5390E198154e2` · token `0xb98B5e2aa3A74cf1cD
 > deployment adds `sealWeight` / `sealedWeightOf`, which a depositor uses to read their own
 > time-weight; nothing on the draw path changed, so every figure below still applies. The
 > addresses in use are always the ones in `deployments/sepolia.json`.
+>
+> **Update, Sep 4.** The pool was redeployed again to fix a real bug: `commitDraw` used to take a
+> plaintext prize that could disagree with what the token actually escrowed, risking depositor
+> principal on an underfunded sponsor. It now takes an encrypted prize the same way `deposit` takes
+> an encrypted balance, and is `payable` to fund an optional per-step reward for whoever advances
+> the draw. That changes `commitDraw`'s own gas line below (it now carries an encryption + proof
+> check) and drops the prize amount from `DrawSettled`/`PrizeReturned` entirely — every other row
+> (deposit, select, reveal, settle) is unaffected, since nothing about the draw's descent changed.
 
 Winner `0xF64915f951Ef8a8307783B7feF702F856aDc01eB`, slot 0, descent path [0, 0, 0].
 The whole draw took **180.4s** and **11351809 gas** across

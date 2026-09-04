@@ -126,8 +126,8 @@ SEPOLIA_RPC_URL=http://127.0.0.1:8547 npm run keeper
 
 | | Sepolia |
 |---|---|
-| pool | `0xfc320bE0eb6876AE29899e4FbbEEb7C0e36b8105` |
-| demo token | `0xb98B5e2aa3A74cf1cDB981b3aA35E3B882487f88` |
+| pool | `0x04693fF8DbD1d68b71b37CD3Ad4D507502968e79` |
+| demo token | `0x829aBacf2D24852F2306c61bB5396C02dc4adf61` |
 
 Arity 16 over 4,096 leaves, three levels, one-hour draw periods. The demo token is faucet-mintable
 by anybody: `claim()` gives 1,000 units, once an hour, so this can be tried without asking anyone
@@ -158,7 +158,7 @@ for tokens.
 | [`docs/TESTING.md`](docs/TESTING.md) | What each suite proves, and what is not tested |
 | [`bench/RESULTS.md`](bench/RESULTS.md) · [`bench/LIVE.md`](bench/LIVE.md) | Cost against N, and one complete draw on Sepolia |
 
-Requirements and success criteria: `../../specs/ticket/spec.md`.
+Requirements and success criteria: [`PRD.md`](PRD.md).
 
 ## Licence
 

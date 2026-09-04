@@ -155,7 +155,8 @@ The seal of the next level is folded into the reveal of the current one, which i
 level to two transactions rather than three.
 
 ```
-commitDraw(prize)      randEuint32, freeze sealTime, escrow the prize,
+commitDraw(fundPrize,  randEuint32, freeze sealTime, escrow the prize
+  encPrize, proof)     (encrypted, same pattern as deposit),
                        seal the root's k children               → Prepared
 
   selectLevel(id)      scan → prefix sums
@@ -177,7 +178,11 @@ settle(id)             slot → address, pay the prize,
 
 `commitDraw` is keeper-only because it escrows the sponsor's prize. **Every other step is
 permissionless**: a half-finished draw holds the pool still, so nobody should be able to strand
-one.
+one. Permissionless is not the same as worth doing, though — `commitDraw` is `payable`, and any
+ETH sent is split evenly across the draw's `2·depth + 1` remaining steps and paid to whoever
+actually calls each one, so a stranger has a reason to. Sending nothing reproduces the old
+behavior exactly; an abandoned draw refunds whatever reward was never paid out back to the
+sponsor.
 
 ## 6. Interactions that arrive mid-draw
 

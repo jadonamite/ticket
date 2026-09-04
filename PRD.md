@@ -2,8 +2,8 @@
 
 **Owner** jadonamite · **Status** approved for build · **Written** Aug 26, 2026
 **Ships against** Zama Developer Program Season 4, Sep 5 2026 23:59 AOE (= Sep 6, 11:59 UTC)
-**Spec of record** `specs/ticket/spec.md` — this document is the product view; the spec is the
-requirement view. Where they disagree, the spec wins.
+**Spec of record**: this document. No separate requirements spec exists — the engineering docs in
+`docs/` are the implementation-level detail, and this is the product-level source of truth.
 
 ---
 
