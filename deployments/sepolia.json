@@ -1,17 +1,17 @@
 {
   "network": "sepolia",
   "chainId": 11155111,
-  "deployedAt": "2026-09-01",
+  "deployedAt": "2026-09-04",
   "contracts": {
     "ConfidentialUSDT": {
-      "address": "0xb98B5e2aa3A74cf1cDB981b3aA35E3B882487f88",
-      "tx": "0x3f2a604ecd080ed2c19ac1d6a8e7c8fde198485088a562032ef96f6feb241409"
+      "address": "0x829aBacf2D24852F2306c61bB5396C02dc4adf61",
+      "tx": "0x09c7e3fd22483536ca9094f87bcd08c55a4d717034a34eabe1e08b6e0884ab07"
     },
     "DrawMachine": {
-      "address": "0xfc320bE0eb6876AE29899e4FbbEEb7C0e36b8105",
-      "tx": "0x0a643ec13bb7aacef41d15512af855ecc34dff7785d2754327081b6242f84457",
+      "address": "0x04693fF8DbD1d68b71b37CD3Ad4D507502968e79",
+      "tx": "0xda6e85fe2b4fa3b18457d510d68170b1c55e91ec878d5a869f3420fec07a1520",
       "args": {
-        "token": "0xb98B5e2aa3A74cf1cDB981b3aA35E3B882487f88",
+        "token": "0x829aBacf2D24852F2306c61bB5396C02dc4adf61",
         "arity": 16,
         "capacity": 4096,
         "periodLength": 3600,
