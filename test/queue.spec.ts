@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { fhevm } from "hardhat";
 
-import { advance, deployDraw, deposit, fund, poolBalance, tokenBalance } from "./helpers/draw";
+import { advance, commit, deployDraw, deposit, fund, poolBalance, tokenBalance } from "./helpers/draw";
 
 /**
  * T028. Interactions that arrive mid-draw.
@@ -14,7 +14,7 @@ import { advance, deployDraw, deposit, fund, poolBalance, tokenBalance } from ".
  */
 describe("TicketPool: interactions during a draw", function () {
   const openDraw = async (f: any) => {
-    await (await f.pool.connect(f.keeper).commitDraw(0n)).wait();
+    await commit(f, 0n);
     return f.pool.drawCount();
   };
 
@@ -154,13 +154,13 @@ describe("TicketPool: interactions during a draw", function () {
 
     // Three interactions are still parked. Sealing the tree now would seal a state already known
     // to be wrong.
-    await expect(f.pool.connect(f.keeper).commitDraw(0n)).to.be.revertedWithCustomError(
+    await expect(commit(f, 0n)).to.be.revertedWithCustomError(
       f.pool,
       "QueueNotDrained",
     );
 
     await (await f.pool.drainQueue(64)).wait();
-    await (await f.pool.connect(f.keeper).commitDraw(0n)).wait();
+    await commit(f, 0n);
   });
 
   it("does not queue when no draw is in flight", async function () {

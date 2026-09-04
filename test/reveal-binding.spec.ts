@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { fhevm } from "hardhat";
 
-import { advance, deployDraw, deposit, fund } from "./helpers/draw";
+import { advance, commit, deployDraw, deposit, fund } from "./helpers/draw";
 
 /**
  * T029, T032. What `revealLevel` will and will not accept.
@@ -24,7 +24,7 @@ describe("DrawMachine: reveal binding and replay", function () {
     await deposit(f, bob, 600n);
     await advance(600);
 
-    await (await f.pool.connect(f.keeper).commitDraw(0n)).wait();
+    await commit(f, 0n);
     const id = await f.pool.drawCount();
     await (await f.pool.selectLevel(id)).wait();
 
@@ -95,7 +95,7 @@ describe("DrawMachine: reveal binding and replay", function () {
     await fund(f, alice);
     await deposit(f, alice, 100n);
 
-    await (await f.pool.connect(f.keeper).commitDraw(0n)).wait();
+    await commit(f, 0n);
     const id = await f.pool.drawCount();
     await expect(f.pool.settle(id)).to.be.revertedWithCustomError(f.pool, "DrawNotFinished");
   });

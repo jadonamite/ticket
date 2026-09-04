@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
-import { advance, deployDraw, deposit, fund, poolBalance, tokenBalance } from "./helpers/draw";
+import { advance, commit, deployDraw, deposit, fund, poolBalance, tokenBalance } from "./helpers/draw";
 
 /**
  * The liveness hole, and the way out of it.
@@ -23,7 +23,7 @@ describe("DrawMachine: abandoning a stalled draw", function () {
     await deposit(f, bob, 500n);
     await advance(600);
 
-    await (await f.pool.connect(f.keeper).commitDraw(300n)).wait();
+    await commit(f, 300n);
     const id = await f.pool.drawCount();
     await (await f.pool.selectLevel(id)).wait();
     return { f, id, alice, bob };
@@ -69,7 +69,7 @@ describe("DrawMachine: abandoning a stalled draw", function () {
     expect(await poolBalance(f, alice)).to.equal(0n);
     expect(await tokenBalance(f, alice)).to.equal(before + 500n);
 
-    await (await f.pool.connect(f.keeper).commitDraw(0n)).wait();
+    await commit(f, 0n);
   });
 
   it("cannot abandon a settled draw, or one that never existed", async function () {
@@ -106,8 +106,8 @@ describe("DrawMachine: rotating the keeper", function () {
 
     await fund(f, alice);
     await deposit(f, alice, 100n);
-    await expect(f.pool.connect(owner).commitDraw(0n)).to.be.revertedWithCustomError(f.pool, "NotKeeper");
-    await (await f.pool.connect(next).commitDraw(0n)).wait();
+    await expect(commit(f, 0n, owner)).to.be.revertedWithCustomError(f.pool, "NotKeeper");
+    await commit(f, 0n, next);
   });
 
   it("will not rotate mid-draw, and will not name nobody", async function () {
@@ -121,7 +121,7 @@ describe("DrawMachine: rotating the keeper", function () {
 
     await fund(f, alice);
     await deposit(f, alice, 100n);
-    await (await f.pool.connect(f.keeper).commitDraw(0n)).wait();
+    await commit(f, 0n);
 
     // A rotation halfway down the tree would orphan the descent.
     await expect(f.pool.connect(owner).setKeeper(next.address)).to.be.revertedWithCustomError(

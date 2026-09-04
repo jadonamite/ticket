@@ -60,6 +60,26 @@ export async function withdrawAll(f: Fixture, who: any) {
   return (await f.pool.connect(who).withdrawAll()).wait();
 }
 
+/**
+ * Open a draw as the keeper. The prize is encrypted the same way a deposit is: there is no
+ * plaintext "declared" amount, only the ciphertext that actually gets escrowed. `commitDraw`'s
+ * first argument is a plaintext flag rather than a value under encryption, so a zero-prize draw
+ * skips the token transfer (and the operator approval it would require) entirely instead of
+ * moving an encrypted zero.
+ *
+ * `reward` is plain ETH, in wei, funding the per-step bounty — optional and zero by default,
+ * which reproduces the old no-incentive behaviour exactly.
+ */
+export async function commit(f: Fixture, prize: bigint, who: any = f.keeper, reward: bigint = 0n) {
+  if (prize === 0n) {
+    return (await f.pool.connect(who).commitDraw(false, ethers.ZeroHash, "0x", { value: reward })).wait();
+  }
+  const input = fhevm.createEncryptedInput(f.poolAddress, who.address);
+  input.add64(prize);
+  const enc = await input.encrypt();
+  return (await f.pool.connect(who).commitDraw(true, enc.handles[0], enc.inputProof, { value: reward })).wait();
+}
+
 export async function poolBalance(f: Fixture, who: any) {
   const handle = await f.pool.confidentialBalanceOf(who.address);
   return fhevm.userDecryptEuint(FhevmType.euint64, handle, f.poolAddress, who);
@@ -91,7 +111,7 @@ export interface DrawTrace {
  * call, and the per-transaction depth ceiling is what splits sealing from selection.
  */
 export async function runDraw(f: Fixture, prize: bigint): Promise<DrawTrace> {
-  const commit = await (await f.pool.connect(f.keeper).commitDraw(prize)).wait();
+  const committed = await commit(f, prize);
   const id = await f.pool.drawCount();
 
   const depth = Number(await f.pool.treeDepth());
@@ -111,6 +131,6 @@ export async function runDraw(f: Fixture, prize: bigint): Promise<DrawTrace> {
   await (await f.pool.settle(id)).wait();
 
   const draw = await f.pool.drawOf(id);
-  void commit;
+  void committed;
   return { id, path, winner: draw.winner, winnerSlot: Number(draw.winnerSlot) };
 }

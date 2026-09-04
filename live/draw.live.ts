@@ -132,7 +132,7 @@ describe("live: a draw on Sepolia", function () {
 
     // --- the draw ----------------------------------------------------------
     const drawStarted = Date.now();
-    await timed("commitDraw", () => pool.connect(keeper).commitDraw(0n));
+    await timed("commitDraw", () => pool.connect(keeper).commitDraw(false, ethers.ZeroHash, "0x"));
     const id = await pool.drawCount();
     console.log(`draw ${id}`);
 

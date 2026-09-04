@@ -6,6 +6,7 @@ import {
   PROD_ARITY,
   PROD_CAPACITY,
   advance,
+  commit,
   deployDraw,
   deposit,
   fund,
@@ -63,6 +64,50 @@ describe("DrawMachine: a draw end to end", function () {
     expect(await poolBalance(f, bob)).to.equal(600n);
   });
 
+  it("pays out exactly what was escrowed, even if the sponsor asked for more than they hold", async function () {
+    // Regression for the bug the encrypted-prize rewrite closes: `commitDraw` used to escrow
+    // whatever the token actually transferred but promise `settle` a separately-trusted number,
+    // so an underfunded sponsor could leave the payout short of what the pool actually took in —
+    // and the difference would have come out of depositor principal, silently. Now there is only
+    // one number: the ciphertext the token really moved. This proves that number, and nothing
+    // else, is what a winner receives.
+    //
+    // ERC7984's transfer is all-or-nothing under the hood (`FHESafeMath.tryDecrease` + a select
+    // on success), not a clamp to the available balance: an amount the sender cannot fully cover
+    // moves zero, not "as much as they have". So asking for more than the sponsor holds is
+    // exercised here as the sharpest version of "declared prize does not match what actually
+    // moved" — the old code would have escrowed 0 but still promised the full inflated number at
+    // settle; the fix means there is no longer a second number to promise.
+    const f = await deployDraw();
+    const [, alice, bob] = f.signers;
+
+    await fund(f, alice);
+    await fund(f, bob);
+    await fund(f, f.sponsor); // one faucet claim only: exactly FAUCET_AMOUNT, no more.
+
+    await deposit(f, alice, 400n);
+    await deposit(f, bob, 600n);
+    await advance(600);
+
+    const sponsorBefore = await tokenBalance(f, f.sponsor); // 1_000_000_000n, the faucet amount
+    const aliceBefore = await tokenBalance(f, alice);
+    const bobBefore = await tokenBalance(f, bob);
+
+    // Ask for ten times more than the sponsor actually holds.
+    const requested = sponsorBefore * 10n;
+    await runDraw(f, requested);
+
+    // Nothing moved: the escrow failed closed, so there is no prize to pay and nothing was ever
+    // pulled from the sponsor.
+    expect(await tokenBalance(f, alice)).to.equal(aliceBefore);
+    expect(await tokenBalance(f, bob)).to.equal(bobBefore);
+    expect(await tokenBalance(f, f.sponsor)).to.equal(sponsorBefore);
+
+    // Depositor principal never moved, no matter how far the requested prize overshot.
+    expect(await poolBalance(f, alice)).to.equal(400n);
+    expect(await poolBalance(f, bob)).to.equal(600n);
+  });
+
   it("returns both principals in full after the draw", async function () {
     const f = await deployDraw();
     const [, alice, bob] = f.signers;
@@ -111,8 +156,8 @@ describe("DrawMachine: a draw end to end", function () {
     await fund(f, alice);
     await deposit(f, alice, 100n);
 
-    await (await f.pool.connect(f.keeper).commitDraw(0n)).wait();
-    await expect(f.pool.connect(f.keeper).commitDraw(0n)).to.be.revertedWithCustomError(f.pool, "DrawInFlight");
+    await commit(f, 0n);
+    await expect(commit(f, 0n)).to.be.revertedWithCustomError(f.pool, "DrawInFlight");
 
     const id = await f.pool.drawCount();
     const depth = Number(await f.pool.treeDepth());
@@ -127,12 +172,12 @@ describe("DrawMachine: a draw end to end", function () {
     await (await f.pool.settle(id)).wait();
 
     expect(await f.pool.drawInFlight()).to.equal(false);
-    await (await f.pool.connect(f.keeper).commitDraw(0n)).wait();
+    await commit(f, 0n);
   });
 
   it("refuses to open a draw over an empty pool", async function () {
     const f = await deployDraw();
-    await expect(f.pool.connect(f.keeper).commitDraw(0n)).to.be.revertedWithCustomError(f.pool, "EmptyPool");
+    await expect(commit(f, 0n)).to.be.revertedWithCustomError(f.pool, "EmptyPool");
   });
 
   it("only the keeper may open a draw, but anyone may push it forward", async function () {
@@ -141,9 +186,9 @@ describe("DrawMachine: a draw end to end", function () {
     await fund(f, alice);
     await deposit(f, alice, 100n);
 
-    await expect(f.pool.connect(alice).commitDraw(0n)).to.be.revertedWithCustomError(f.pool, "NotKeeper");
+    await expect(commit(f, 0n, alice)).to.be.revertedWithCustomError(f.pool, "NotKeeper");
 
-    await (await f.pool.connect(f.keeper).commitDraw(0n)).wait();
+    await commit(f, 0n);
     // A half-finished draw holds the pool still, so stranding one must not be possible.
     await (await f.pool.connect(alice).selectLevel(await f.pool.drawCount())).wait();
   });

@@ -4,7 +4,7 @@ import { fhevm } from "hardhat";
 
 import { ethers } from "hardhat";
 
-import { advance, deployDraw, deposit, fund } from "./helpers/draw";
+import { advance, commit, deployDraw, deposit, fund } from "./helpers/draw";
 
 /** The block timestamp a transaction landed in. */
 async function stampOf(receipt: any) {
@@ -122,7 +122,7 @@ describe("TicketPool: odds are time-weighted, under encryption", function () {
 
     let patientWins = 0;
     for (let round = 0; round < 12; round++) {
-      await (await f.pool.connect(f.keeper).commitDraw(0n)).wait();
+      await commit(f, 0n);
       const id = await f.pool.drawCount();
       const depth = Number(await f.pool.treeDepth());
       for (let level = 0; level < depth; level++) {

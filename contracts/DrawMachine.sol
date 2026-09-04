@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
-import {FHE, ebool, euint8, euint32, euint64, euint128} from "@fhevm/solidity/lib/FHE.sol";
+import {FHE, ebool, euint8, euint32, euint64, euint128, externalEuint64} from "@fhevm/solidity/lib/FHE.sol";
 import {IERC7984} from "@openzeppelin/confidential-contracts/interfaces/IERC7984.sol";
 
 import {TicketPool} from "./TicketPool.sol";
@@ -55,7 +55,7 @@ contract DrawMachine is TicketPool {
     struct Draw {
         uint32 period;
         uint32 sealTime;
-        uint64 prize;
+        euint64 prize;
         address sponsor;
         uint32 node;
         uint8 level;
@@ -63,6 +63,14 @@ contract DrawMachine is TicketPool {
         bool leafReached;
         uint32 winnerSlot;
         address winner;
+        /// @dev Plain ETH, in wei, paid to whoever calls the next permissionless step. Amounts
+        ///      and existence of this reward are not privacy-sensitive — gas cost is already
+        ///      public — so unlike the prize there is nothing to encrypt here.
+        uint256 rewardPerStep;
+        /// @dev What is left of the funded bounty. Sized at commit to cover exactly the steps a
+        ///      completed draw takes; whatever a draw that gets abandoned partway through never
+        ///      paid out is refunded to the sponsor rather than left stranded in the contract.
+        uint256 rewardBudget;
     }
 
     /// @notice How long a draw may sit unfinished before anyone may abandon it.
@@ -118,15 +126,14 @@ contract DrawMachine is TicketPool {
         uint256 indexed id,
         uint32 indexed period,
         uint32 sealTime,
-        uint64 prize,
         address sponsor,
         uint8 levels
     );
     event LevelPrepared(uint256 indexed id, uint8 indexed level, uint32 node);
     event LevelSelected(uint256 indexed id, uint8 indexed level, bytes32 indexHandle);
     event LevelRevealed(uint256 indexed id, uint8 indexed level, uint8 child, uint32 node);
-    event DrawSettled(uint256 indexed id, address indexed winner, uint32 winnerSlot, uint64 prize, uint32 participants);
-    event PrizeReturned(uint256 indexed id, address indexed sponsor, uint64 prize);
+    event DrawSettled(uint256 indexed id, address indexed winner, uint32 winnerSlot, uint32 participants);
+    event PrizeReturned(uint256 indexed id, address indexed sponsor);
     event DrawAbandoned(uint256 indexed id, uint8 reachedLevel, address caller);
     event KeeperChanged(address indexed from, address indexed to);
 
@@ -184,14 +191,39 @@ contract DrawMachine is TicketPool {
     /// @notice Open a draw, freeze the clock it will be judged against, and seal the root's
     ///         children in the same transaction.
     ///
-    /// @dev The prize is plaintext and pulled from the sponsor here, not taken from the pool.
+    /// @dev The prize is encrypted end to end, the same way a deposit is: the sponsor submits a
+    ///      ciphertext and a proof, and the ciphertext that the token actually moves — not a
+    ///      number the keeper separately declares — is what gets escrowed and, later, what gets
+    ///      paid out. There is no plaintext figure anywhere for those two to disagree about,
+    ///      which closes the gap the previous version had: it escrowed whatever the token
+    ///      actually transferred but promised to pay out a separately-trusted `uint64`, so an
+    ///      underfunded sponsor could leave `settle` short and the difference would have come out
+    ///      of depositor principal, silently.
+    ///
     ///      Depositors' principal is not a prize pool and paying out of it would silently make
     ///      this a lottery; the interface says "sponsor-funded" because the contract is.
+    ///
+    ///      `fundPrize` is a plaintext flag the keeper sets, not a fact read off a ciphertext, so
+    ///      branching on it is the same category of thing as branching on `child > 0` elsewhere
+    ///      in this file — it costs nothing to reveal because it is the caller's own declared
+    ///      choice, not a value anyone is trying to keep hidden.
     ///
     ///      `FHE.randEuint32` is a state-changing call — randomness cannot be produced by a
     ///      read-only call — which is one reason the commit is its own transaction rather than
     ///      something a viewer can simulate.
-    function commitDraw(uint64 prize) external onlyKeeper returns (uint256 id) {
+    ///
+    ///      Every step after this one is already permissionless in the sense that anyone *may*
+    ///      call it. Nothing so far made it worth anyone's while to be the one who does, besides
+    ///      the keeper's own script — the same gap PoolTogether closes with a pair of Dutch
+    ///      auctions. `msg.value` here is the plain-ETH version of that: an optional bounty pool,
+    ///      split evenly over the `2*treeDepth + 1` remaining steps (select and reveal per level,
+    ///      then settle) and paid to whoever actually calls each one. Sending nothing reproduces
+    ///      the old behaviour exactly — a reward of zero pays nothing and changes nothing else.
+    function commitDraw(
+        bool fundPrize,
+        externalEuint64 encryptedPrize,
+        bytes calldata inputProof
+    ) external payable onlyKeeper returns (uint256 id) {
         if (openDraw != 0) revert DrawInFlight(openDraw);
         if (nextSlot == 0) revert EmptyPool();
         // A draw must be judged against a settled tree. Interactions parked behind the previous
@@ -209,17 +241,36 @@ contract DrawMachine is TicketPool {
         Draw storage draw = _draws[id];
         draw.period = period;
         draw.sealTime = sealTime;
-        draw.prize = prize;
         draw.sponsor = msg.sender;
         draw.node = 0;
         draw.level = 0;
         draw.phase = Phase.Prepared;
 
-        if (prize > 0) {
-            euint64 escrow = FHE.asEuint64(prize);
-            FHE.allowThis(escrow);
-            FHE.allowTransient(escrow, address(token));
-            token.confidentialTransferFrom(msg.sender, address(this), escrow);
+        euint64 escrowed;
+        if (fundPrize) {
+            euint64 requested = FHE.fromExternal(encryptedPrize, inputProof);
+            FHE.allowTransient(requested, address(token));
+            // The amount that actually moved, not the amount requested, is what the draw owes —
+            // the same rule `deposit` follows.
+            escrowed = token.confidentialTransferFrom(msg.sender, address(this), requested);
+        } else {
+            escrowed = FHE.asEuint64(0);
+        }
+        FHE.allowThis(escrowed);
+        draw.prize = escrowed;
+
+        if (msg.value > 0) {
+            uint256 steps = 2 * uint256(treeDepth) + 1;
+            uint256 perStep = msg.value / steps;
+            draw.rewardPerStep = perStep;
+            draw.rewardBudget = perStep * steps;
+            uint256 dust = msg.value - draw.rewardBudget;
+            if (dust > 0) {
+                (bool sent, ) = payable(msg.sender).call{value: dust}("");
+                // A keeper that cannot receive its own change is still a keeper; the dust just
+                // stays here rather than blocking the draw it funded.
+                sent;
+            }
         }
 
         euint32 r = FHE.randEuint32();
@@ -227,7 +278,7 @@ contract DrawMachine is TicketPool {
         FHE.allowThis(scaled);
         _point[id] = scaled;
 
-        emit DrawCommitted(id, period, sealTime, prize, msg.sender, treeDepth);
+        emit DrawCommitted(id, period, sealTime, msg.sender, treeDepth);
 
         _prepare(id, draw);
     }
@@ -302,6 +353,7 @@ contract DrawMachine is TicketPool {
         draw.phase = Phase.Selected;
 
         emit LevelSelected(id, draw.level, euint8.unwrap(idx));
+        _payStepReward(draw);
     }
 
     /// @notice Submit the KMS-signed decryption of the published index, descend into that child,
@@ -347,6 +399,8 @@ contract DrawMachine is TicketPool {
             draw.phase = Phase.Prepared;
             _prepare(id, draw);
         }
+
+        _payStepReward(draw);
     }
 
     /// @dev Sum `values[from..to)` as a balanced tree, so depth is log2 of the range rather than
@@ -385,21 +439,18 @@ contract DrawMachine is TicketPool {
         openDraw = 0;
 
         address winner = draw.winner;
-        if (draw.prize > 0) {
-            euint64 prize = FHE.asEuint64(draw.prize);
-            FHE.allowThis(prize);
-            FHE.allowTransient(prize, address(token));
-            if (winner == address(0)) {
-                token.confidentialTransfer(draw.sponsor, prize);
-                emit PrizeReturned(id, draw.sponsor, draw.prize);
-            } else {
-                token.confidentialTransfer(winner, prize);
-            }
+        FHE.allowTransient(draw.prize, address(token));
+        if (winner == address(0)) {
+            token.confidentialTransfer(draw.sponsor, draw.prize);
+            emit PrizeReturned(id, draw.sponsor);
+        } else {
+            token.confidentialTransfer(winner, draw.prize);
         }
 
-        emit DrawSettled(id, winner, draw.winnerSlot, draw.prize, nextSlot);
+        emit DrawSettled(id, winner, draw.winnerSlot, nextSlot);
 
         _drainQueue();
+        _payStepReward(draw);
     }
 
     /// @notice Release a draw that has stopped making progress, and give the prize back.
@@ -425,12 +476,17 @@ contract DrawMachine is TicketPool {
         draw.winner = address(0);
         openDraw = 0;
 
-        if (draw.prize > 0) {
-            euint64 prize = FHE.asEuint64(draw.prize);
-            FHE.allowThis(prize);
-            FHE.allowTransient(prize, address(token));
-            token.confidentialTransfer(draw.sponsor, prize);
-            emit PrizeReturned(id, draw.sponsor, draw.prize);
+        FHE.allowTransient(draw.prize, address(token));
+        token.confidentialTransfer(draw.sponsor, draw.prize);
+        emit PrizeReturned(id, draw.sponsor);
+
+        // Whatever slice of the reward budget the draw never reached paying out goes back to
+        // whoever funded it, rather than sitting stranded in the contract forever.
+        uint256 unpaid = draw.rewardBudget;
+        if (unpaid > 0) {
+            draw.rewardBudget = 0;
+            (bool sent, ) = payable(draw.sponsor).call{value: unpaid}("");
+            sent;
         }
 
         emit DrawAbandoned(id, draw.level, msg.sender);
@@ -439,6 +495,23 @@ contract DrawMachine is TicketPool {
     }
 
     // ------------------------------------------------------------- internals
+
+    /// @dev Pays whoever just advanced the draw, out of the budget `commitDraw` funded. Silent
+    ///      no-op if the draw was never funded, or if its budget is already spent — the latter
+    ///      should not happen along the normal path (`commitDraw` sizes the budget to exactly the
+    ///      steps a draw takes), but a reward is a courtesy, not an invariant, and must never be
+    ///      the reason a step reverts.
+    function _payStepReward(Draw storage draw) private {
+        uint256 reward = draw.rewardPerStep;
+        if (reward == 0 || draw.rewardBudget < reward) return;
+
+        // Budget is only spent on a successful send. A caller that cannot receive plain ETH
+        // (no `receive`/`payable fallback`) simply does not collect this round's reward; the
+        // amount stays in the budget for `abandonDraw` to refund if the draw never finishes, or
+        // sits unclaimed rather than being burned if it does.
+        (bool sent, ) = payable(msg.sender).call{value: reward}("");
+        if (sent) draw.rewardBudget -= reward;
+    }
 
     function _mustBe(uint256 id, Phase expected) private view returns (Draw storage draw) {
         if (id == 0 || id > drawCount) revert NoDraw(id);

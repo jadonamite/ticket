@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { FhevmType } from "@fhevm/mock-utils";
 import { ethers, fhevm } from "hardhat";
 
-import { advance, deployDraw, deposit, fund, runDraw, withdrawAll } from "./helpers/draw";
+import { advance, commit, deployDraw, deposit, fund, runDraw, withdrawAll } from "./helpers/draw";
 
 /**
  * T031. What the public record gives away.
@@ -117,7 +117,7 @@ describe("DrawMachine: nothing recoverable from the public record", function () 
     await expect(fhevm.publicDecrypt([balance])).to.be.rejected;
     await expect(fhevm.publicDecrypt([weight])).to.be.rejected;
 
-    await (await f.pool.connect(f.keeper).commitDraw(0n)).wait();
+    await commit(f, 0n);
     const id = await f.pool.drawCount();
     await (await f.pool.selectLevel(id)).wait();
 

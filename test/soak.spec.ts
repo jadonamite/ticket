@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { fhevm } from "hardhat";
 
-import { advance, deployDraw, deposit, fund, poolBalance, tokenBalance, withdrawAll } from "./helpers/draw";
+import { advance, commit, deployDraw, deposit, fund, poolBalance, tokenBalance, withdrawAll } from "./helpers/draw";
 
 /**
  * The engine under repetition.
@@ -40,7 +40,7 @@ describe("DrawMachine: many draws in a row", function () {
     const wins: Record<string, number> = { [whale.address]: 0, [minnow.address]: 0 };
 
     for (let round = 0; round < ROUNDS; round++) {
-      const id = (await (await f.pool.connect(f.keeper).commitDraw(0n)).wait(), await f.pool.drawCount());
+      const id = (await commit(f, 0n), await f.pool.drawCount());
       const depth = Number(await f.pool.treeDepth());
       for (let level = 0; level < depth; level++) {
         await (await f.pool.selectLevel(id)).wait();
@@ -110,7 +110,7 @@ describe("DrawMachine: many draws in a row", function () {
 
       if (Object.values(staked).some((v) => v > 0n)) {
         const prize = BigInt(next(500));
-        await (await f.pool.connect(f.keeper).commitDraw(prize)).wait();
+        await commit(f, prize);
         const id = await f.pool.drawCount();
         const depth = Number(await f.pool.treeDepth());
         for (let level = 0; level < depth; level++) {

@@ -62,6 +62,12 @@ task("ticket:status", "Print the deployed pool's state")
 
 task("ticket:draw", "Open a draw and drive it to settlement, or resume one already open")
   .addOptionalParam("prize", "Prize in base units, pulled from the keeper", "0", types.string)
+  .addOptionalParam(
+    "reward",
+    "Bounty in wei, split over the draw's steps and paid to whoever calls each one",
+    "0",
+    types.string,
+  )
   .addOptionalParam("deployment", "Path to the deployment record", "deployments/sepolia.json", types.string)
   .setAction(async (args, hre) => {
     await hre.fhevm.initializeCLIApi();
@@ -85,9 +91,26 @@ task("ticket:draw", "Open a draw and drive it to settlement, or resume one alrea
         console.log(`draining ${waiting} parked interactions before sealing`);
         await (await pool.connect(keeper).drainQueue(64)).wait();
       }
-      await (await pool.connect(keeper).commitDraw(BigInt(args.prize))).wait();
+      const prize = BigInt(args.prize);
+      const reward = BigInt(args.reward);
+      if (prize > 0n) {
+        const input = hre.fhevm.createEncryptedInput(address, keeper.address);
+        input.add64(prize);
+        const enc = await input.encrypt();
+        await (
+          await pool.connect(keeper).commitDraw(true, enc.handles[0], enc.inputProof, { value: reward })
+        ).wait();
+      } else {
+        await (
+          await pool.connect(keeper).commitDraw(false, hre.ethers.ZeroHash, "0x", { value: reward })
+        ).wait();
+      }
       id = await pool.drawCount();
       console.log(`opened draw ${id}${args.prize === "0" ? "" : ` with a prize of ${args.prize}`}`);
+      if (reward > 0n) {
+        const opened = await pool.drawOf(id);
+        console.log(`  funded a bounty of ${reward} wei, ${opened.rewardPerStep} wei per step`);
+      }
     } else {
       console.log(`resuming draw ${id}`);
     }
