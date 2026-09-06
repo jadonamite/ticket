@@ -6,6 +6,7 @@ import Link from "next/link";
 import { DRAW_MACHINE_ADDRESS, POOL_PARAMS, drawMachineContract } from "../../../lib/contracts";
 import { WalletProvider } from "../../../lib/providers";
 import { PillLink } from "../../../components/xenia/Pill";
+import { AppFooter } from "../../../components/xenia/AppFooter";
 import "../../../styles/xenia-app.css";
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
@@ -199,6 +200,7 @@ function Verify({ id }: { id: string }) {
           </div>
         )}
       </main>
+      <AppFooter />
     </div>
   );
 }

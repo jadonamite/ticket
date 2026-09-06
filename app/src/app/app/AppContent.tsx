@@ -23,6 +23,7 @@ import { WalletProvider } from "../../lib/providers";
 import { wagmiConfig } from "../../lib/wagmi";
 import { PillButton, PillLink } from "../../components/xenia/Pill";
 import { SlideToConfirm } from "../../components/xenia/SlideToConfirm";
+import { AppFooter } from "../../components/xenia/AppFooter";
 import "../../styles/xenia-app.css";
 
 // Matches the far-future expiry tasks/whale.ts uses for the same approval.
@@ -484,6 +485,7 @@ function Dashboard() {
           )}
         </div>
       </main>
+      <AppFooter />
     </div>
   );
 }

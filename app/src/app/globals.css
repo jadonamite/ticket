@@ -209,3 +209,45 @@ h1, h2, h3, .font-heading {
 .animate-marquee:hover {
   animation-play-state: paused;
 }
+
+/* ---------- footer (XENIA-style bleed wordmark) ---------- */
+
+.footer-mark-wrap {
+  position: relative;
+  width: 100%;
+  margin-top: 24px;
+  margin-bottom: -18px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  user-select: none;
+}
+
+.footer-mark {
+  font-size: clamp(90px, 22vw, 280px);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.82;
+  text-transform: uppercase;
+  text-align: center;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  color: #181818;
+  background: linear-gradient(180deg, rgba(24, 24, 24, 0.16) 0%, rgba(24, 24, 24, 0.05) 50%, rgba(24, 24, 24, 0) 92%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.35) 55%, rgba(0, 0, 0, 0) 98%);
+  -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.35) 55%, rgba(0, 0, 0, 0) 98%);
+}
+
+.footer-bullet {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 1px;
+  background: #006fff;
+}
