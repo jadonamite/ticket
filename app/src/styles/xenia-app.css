@@ -1,0 +1,433 @@
+/**
+ * Design system ported from jadonamite/XENIA (usexenia.vercel.app) for Ticket's product screens
+ * (/app, /verify/[id]) — the landing page keeps its own industrial-blueprint identity, so every
+ * rule here is scoped under `.xenia-app` rather than touching the global stylesheet, and every
+ * token is prefixed `--xa-` so it can't collide with Ticket's existing `--accent-blue` etc.
+ * Values (colors, radii, the pill glider animation, the card/panel/table primitives) are copied
+ * from XENIA/src/app/globals.css, not reinvented.
+ */
+
+.xenia-app {
+  --xa-paper: #f4f5f6;
+  --xa-paper-2: #eaebec;
+  --xa-card: #ecedee;
+  --xa-card-raised: #ffffff;
+  --xa-ink: #17171a;
+  --xa-ink-2: #6e7075;
+  --xa-ink-3: #a2a5aa;
+  --xa-accent: #1391e2;
+  --xa-accent-2: #7fc4ef;
+  --xa-accent-3: #d3e9f9;
+  --xa-pill: #21201e;
+  --xa-hairline: #dfe1e3;
+  --xa-good: #10794a;
+  --xa-bad: #c2382f;
+  --xa-warn: #8a6100;
+
+  font-family: "Switzer", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--xa-paper);
+  color: var(--xa-ink);
+  min-height: 100vh;
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.xenia-app * {
+  box-sizing: border-box;
+}
+
+.xenia-app a {
+  color: inherit;
+}
+
+.xenia-app .xa-page {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 44px 24px 110px;
+}
+
+.xenia-app .xa-page-wide {
+  max-width: 920px;
+}
+
+.xenia-app h1 {
+  margin: 0 0 10px;
+  font-size: clamp(30px, 4vw, 40px);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.xenia-app h2 {
+  margin: 0 0 4px;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.xenia-app .xa-lede {
+  margin: 0;
+  color: var(--xa-ink-2);
+}
+
+.xenia-app .xa-small {
+  font-size: 13.5px;
+  color: var(--xa-ink-2);
+}
+
+.xenia-app .xa-mono {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  word-break: break-all;
+}
+
+.xenia-app .xa-note {
+  font-size: 13.5px;
+  color: var(--xa-ink-2);
+}
+
+.xenia-app .xa-error {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(194, 56, 47, 0.08);
+  border: 1px solid rgba(194, 56, 47, 0.2);
+  color: var(--xa-bad);
+  font-size: 13.5px;
+}
+
+.xenia-app .xa-warning {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(138, 97, 0, 0.08);
+  border: 1px solid rgba(138, 97, 0, 0.2);
+  color: var(--xa-warn);
+  font-size: 13.5px;
+}
+
+.xenia-app .xa-ok {
+  color: var(--xa-good);
+}
+
+/* ---------- surfaces ---------- */
+
+.xenia-app .xa-card {
+  background: var(--xa-card);
+  border-radius: 18px;
+  padding: 22px;
+}
+
+.xenia-app .xa-card-raised {
+  background: var(--xa-card-raised);
+  border: 1px solid var(--xa-hairline);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.xenia-app .xa-panel {
+  padding: 22px;
+  background: var(--xa-card);
+  border-radius: 18px;
+}
+
+.xenia-app .xa-panel-white {
+  background: var(--xa-card-raised);
+  border: 1px solid var(--xa-hairline);
+}
+
+.xenia-app .xa-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.xenia-app .xa-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---------- form ---------- */
+
+.xenia-app label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--xa-ink-2);
+}
+
+.xenia-app input,
+.xenia-app select {
+  width: 100%;
+  padding: 11px 13px;
+  background: var(--xa-card-raised);
+  border: 1px solid var(--xa-hairline);
+  border-radius: 10px;
+  color: var(--xa-ink);
+  font: inherit;
+  font-size: 15px;
+}
+
+.xenia-app input:focus,
+.xenia-app select:focus {
+  outline: 2px solid var(--xa-accent);
+  outline-offset: -1px;
+}
+
+/* Giant amount field, matching XENIA's create-page numeral input. */
+.xenia-app .xa-amount-field {
+  padding: 18px 18px 14px;
+  border-radius: 18px;
+  background: var(--xa-card-raised);
+  border: 1px solid var(--xa-hairline);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.xenia-app .xa-amount-input {
+  border: 0;
+  padding: 0;
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--xa-ink);
+  background: transparent;
+  width: 100%;
+  outline: none;
+  letter-spacing: -0.02em;
+}
+
+.xenia-app .xa-preset {
+  padding: 10px 6px;
+  border-radius: 12px;
+  border: 1px solid var(--xa-hairline);
+  background: var(--xa-card-raised);
+  color: var(--xa-ink);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 160ms ease;
+  text-align: center;
+}
+
+.xenia-app .xa-preset-active {
+  border: 1.5px solid var(--xa-accent);
+  background: rgba(19, 145, 226, 0.08);
+  color: var(--xa-accent);
+  box-shadow: 0 2px 8px rgba(19, 145, 226, 0.15);
+}
+
+/* ---------- table ---------- */
+
+.xenia-app table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14.5px;
+}
+
+.xenia-app th,
+.xenia-app td {
+  padding: 12px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--xa-hairline);
+}
+
+.xenia-app th {
+  color: var(--xa-ink-2);
+  font-weight: 500;
+}
+
+/* ---------- badge ---------- */
+
+.xenia-app .xa-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+/* ---------- pill button (XENIA's glider animation) ---------- */
+
+.xenia-app .pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 4px 48px 4px 20px;
+  background: var(--xa-pill);
+  color: #fff;
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 500;
+  cursor: pointer;
+  overflow: hidden;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition:
+    padding 450ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 400ms ease,
+    color 400ms ease,
+    border-color 400ms ease,
+    box-shadow 400ms ease,
+    transform 160ms ease;
+}
+
+.xenia-app .pill:hover:not(:disabled) {
+  padding: 4px 20px 4px 48px;
+  background: var(--xa-accent);
+  color: #fff;
+  box-shadow: 0 0 24px -2px rgba(19, 145, 226, 0.55), 0 4px 12px rgba(19, 145, 226, 0.25);
+}
+
+.xenia-app .pill:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.xenia-app .pill:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.xenia-app .pill-text {
+  position: relative;
+  z-index: 1;
+  transition: transform 450ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.xenia-app .pill-chip {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%) rotate(0deg);
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  background: var(--xa-accent);
+  color: #fff;
+  font-size: 15px;
+  line-height: 1;
+  transition:
+    right 450ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    transform 450ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 400ms ease,
+    color 400ms ease;
+}
+
+.xenia-app .pill:hover:not(:disabled) .pill-chip {
+  right: calc(100% - 38px);
+  transform: translateY(-50%) rotate(45deg);
+  background: #ffffff;
+  color: var(--xa-accent);
+}
+
+.xenia-app .pill-ghost {
+  background: transparent;
+  color: var(--xa-ink);
+  border-color: var(--xa-hairline);
+  box-shadow: none;
+}
+
+.xenia-app .pill-ghost .pill-chip {
+  background: var(--xa-card);
+  color: var(--xa-ink-2);
+}
+
+.xenia-app .pill-ghost:hover:not(:disabled) {
+  background: var(--xa-card-raised);
+  border-color: var(--xa-accent);
+  color: var(--xa-accent);
+  box-shadow: 0 0 20px -4px rgba(19, 145, 226, 0.25);
+}
+
+.xenia-app .pill-ghost:hover:not(:disabled) .pill-chip {
+  background: var(--xa-accent);
+  color: #ffffff;
+}
+
+.xenia-app .pill-plain {
+  height: auto;
+  padding: 8px 18px;
+  border-radius: 12px;
+}
+
+.xenia-app .pill-plain:hover:not(:disabled) {
+  padding: 8px 18px;
+  background: var(--xa-accent);
+  color: #fff;
+}
+
+.xenia-app .pill-ghost.pill-plain {
+  background: transparent;
+  color: var(--xa-ink);
+  border-color: var(--xa-hairline);
+}
+
+.xenia-app .pill-ghost.pill-plain:hover:not(:disabled) {
+  background: var(--xa-card-raised);
+  color: var(--xa-accent);
+  border-color: var(--xa-accent);
+}
+
+/* ---------- in-app tab nav (AppHeader pattern) ---------- */
+
+.xenia-app .xa-tabs {
+  display: inline-flex;
+  align-items: center;
+  background: var(--xa-card);
+  padding: 3px;
+  border-radius: 9999px;
+  border: 1px solid var(--xa-hairline);
+}
+
+.xenia-app .xa-tab {
+  padding: 6px 16px;
+  border-radius: 9999px;
+  font-size: 13.5px;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--xa-ink-2);
+  transition: all 200ms ease;
+}
+
+.xenia-app .xa-tab-active {
+  background: var(--xa-card-raised);
+  color: var(--xa-ink);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* ---------- header ---------- */
+
+.xenia-app .xa-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(244, 245, 246, 0.88);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--xa-hairline);
+}
+
+.xenia-app .xa-header-inner {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+@keyframes xa-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

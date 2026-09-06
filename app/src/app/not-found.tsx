@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 
 export default function NotFound() {
   return (
@@ -17,11 +17,11 @@ export default function NotFound() {
         </h1>
 
         <p className="text-sm text-[#686868]">
-          The page you are looking for doesn't exist or has been moved. Let's get you back to creating great content.
+          The page you are looking for doesn't exist or has been moved.
         </p>
 
         <Link href="/" className="btn-primary w-full py-3">
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft weight="bold" className="w-4 h-4" />
           <span>Return to Homepage</span>
         </Link>
       </div>

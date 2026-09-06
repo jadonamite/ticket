@@ -1,7 +1,7 @@
 import React from "react";
 import { SectionHeader } from "@/components/SectionHeader";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 
 export default function TermsOfServicePage() {
   return (
@@ -12,7 +12,7 @@ export default function TermsOfServicePage() {
             href="/"
             className="inline-flex items-center gap-1.5 text-xs font-mono-custom text-[#686868] hover:text-[#181818] transition-colors mb-4"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
+            <ArrowLeft weight="bold" className="w-3.5 h-3.5" />
             <span>Back to home</span>
           </Link>
         </div>
@@ -20,45 +20,43 @@ export default function TermsOfServicePage() {
         <SectionHeader
           badge="legal"
           title="Terms of Service"
-          description="Last updated: June 2026 · It outlines the rules, responsibilities, and expectations between Verseo and users."
+          description="Open-source software, provided as-is, running on Ethereum Sepolia testnet."
         />
 
         <div className="max-w-3xl mx-auto verseo-card p-8 md:p-12 bg-white shadow-sm space-y-8 text-sm sm:text-base text-[#404040] leading-relaxed">
           <section className="space-y-3">
-            <h3 className="text-lg font-bold text-[#181818]">1. Introduction</h3>
+            <h3 className="text-lg font-bold text-[#181818]">1. What Ticket is</h3>
             <p>
-              Welcome to Verseo ("we," "our," "us"). By accessing and using our website and services, you agree to comply with and be bound by these Terms of Service. If you do not agree to these terms, please do not use our platform.
+              Ticket is MIT-licensed, open-source software: a smart contract and a frontend for
+              interacting with it. It currently runs on Ethereum Sepolia, a public testnet — the
+              demo token used for deposits has no monetary value.
             </p>
           </section>
 
           <section className="space-y-3">
-            <h3 className="text-lg font-bold text-[#181818]">2. Services & Content Ownership</h3>
+            <h3 className="text-lg font-bold text-[#181818]">2. You control your funds</h3>
             <p>
-              We provide AI-powered content automation tools, templates, and workflow integrations. You retain 100% full intellectual property ownership of all original text prompts and final content generated through your account.
+              Every action — deposit, withdrawal, draw — is a transaction you sign with your own
+              wallet. Nobody, including the contract's author, can move your funds or read your
+              balance. You are solely responsible for the security of your wallet and private keys.
             </p>
           </section>
 
           <section className="space-y-3">
-            <h3 className="text-lg font-bold text-[#181818]">3. User Responsibilities</h3>
-            <p>By using Verseo, you agree that you will not:</p>
-            <ul className="list-disc pl-5 space-y-1.5 text-[#505050]">
-              <li>Use the platform for any illegal, defamatory, or fraudulent purposes.</li>
-              <li>Attempt to reverse-engineer, disrupt, or bypass rate limits on our infrastructure.</li>
-              <li>Infringe upon the intellectual property or privacy rights of any third party.</li>
-            </ul>
-          </section>
-
-          <section className="space-y-3">
-            <h3 className="text-lg font-bold text-[#181818]">4. Subscriptions & Cancellations</h3>
+            <h3 className="text-lg font-bold text-[#181818]">3. No warranty</h3>
             <p>
-              Paid subscription tiers (Starter, Pro, Team) are billed in advance on a recurring monthly or annual basis. You may cancel your subscription at any time via your account settings with zero hidden penalty fees.
+              This software is provided "as is," without warranty of any kind, express or implied,
+              per the MIT License. It has not undergone a third-party security audit. Use on
+              mainnet, or with funds you cannot afford to lose, is not recommended.
             </p>
           </section>
 
           <section className="space-y-3">
-            <h3 className="text-lg font-bold text-[#181818]">5. Limitation of Liability</h3>
+            <h3 className="text-lg font-bold text-[#181818]">4. No custody, no subscription</h3>
             <p>
-              Verseo provides AI generation tools on an "as is" basis. While we strive for extreme accuracy, users are encouraged to review critical legal or medical copy prior to formal public distribution.
+              There are no accounts, no subscriptions, and no fees charged by Ticket itself — only
+              the gas cost of the transactions you choose to send. The full source is available to
+              read, fork, and self-host.
             </p>
           </section>
         </div>

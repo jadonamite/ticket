@@ -1,44 +1,53 @@
 import React from "react";
 import { SectionHeader } from "./SectionHeader";
-import { Gauge, CheckCheck, Clock, Share2, Sparkles, TrendingUp } from "lucide-react";
+import { ShieldCheck, LockKey, Scales, MagnifyingGlass, DoorOpen } from "@phosphor-icons/react/dist/ssr";
 
 export const Results = () => {
   const cards = [
     {
-      title: "Stay in the flow",
-      tagline: "No more switching between tools and tabs.",
+      title: "No loss",
+      tagline: "Full principal back, whenever you ask.",
       description:
-        "Keep momentum while writing. Generate, improve, and expand ideas without breaking your creative process.",
-      icon: Gauge,
-      metric: "10x",
-      metricLabel: "faster creation",
-    },
-    {
-      title: "Ready to Publish",
-      tagline: "Export your content wherever you need it.",
-      description:
-        "Review, edit, regenerate, and push your content directly into production channels with verified formatting.",
-      icon: CheckCheck,
+        "Nobody loses principal. Ever. No exceptions, no rounding against the depositor — the only thing at stake is the prize, pooled and drawn for instead.",
+      icon: ShieldCheck,
       metric: "100%",
-      metricLabel: "brand aligned",
+      metricLabel: "principal protected",
     },
     {
-      title: "Less time spent editing",
-      tagline: "Refine and finalize drafts in seconds.",
+      title: "Private",
+      tagline: "Your balance and history are yours.",
       description:
-        "Polish phrasing and tone with AI-powered suggestions, cutting out repetitive back-and-forth review loops.",
-      icon: Clock,
-      metric: "-70%",
-      metricLabel: "editing hours",
+        "Balances are encrypted from other players, the operator, and the person who wrote the contract — for the whole time your money is in the pool.",
+      icon: LockKey,
+      metric: "0",
+      metricLabel: "balances in the clear",
     },
     {
-      title: "Content that fits anywhere",
-      tagline: "From social posts to long-form content.",
+      title: "Fair",
+      tagline: "Odds by time held, not by timing the draw.",
       description:
-        "Keep messaging aligned across emails, social media, landing pages, and campaigns with unified tone memory.",
-      icon: Share2,
-      metric: "Omni",
-      metricLabel: "channel sync",
+        "A late whale who deposits seconds before a draw wins odds near zero, demonstrably — the same protection public pools have, rebuilt to work encrypted.",
+      icon: Scales,
+      metric: "Longer = better",
+      metricLabel: "odds by time held",
+    },
+    {
+      title: "Checkable",
+      tagline: "Every draw verifiable by anyone.",
+      description:
+        "Randomness, weighting, cap, and winner selection — each independently confirmed in one click from any settled draw.",
+      icon: MagnifyingGlass,
+      metric: "1-click",
+      metricLabel: "verify draw",
+    },
+    {
+      title: "Free to leave",
+      tagline: "No lock-up, no notice period.",
+      description:
+        "Withdraw in full at any time. There is no penalty for leaving early and no minimum holding period to earn a draw entry.",
+      icon: DoorOpen,
+      metric: "0",
+      metricLabel: "lock-up days",
     },
   ];
 
@@ -49,13 +58,13 @@ export const Results = () => {
 
       <div className="framed-container px-4 sm:px-6">
         <SectionHeader
-          badge="results"
-          title="See the impact instantly"
-          description="Create content faster, stay consistent across every channel, and achieve better results with less effort."
+          badge="what you get"
+          title="Five promises, held at once"
+          description="Everything anyone needs to check fairness is public. Nothing anyone could use to snoop is."
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
-          {cards.map((c, i) => {
+          {cards.map((c) => {
             const Icon = c.icon;
             return (
               <div
@@ -65,7 +74,7 @@ export const Results = () => {
                 <div>
                   <div className="flex items-center justify-between mb-6">
                     <div className="w-10 h-10 rounded-2xl bg-[#f6f6f6] border border-[#ededed] flex items-center justify-center text-[#181818]">
-                      <Icon className="w-5 h-5" />
+                      <Icon className="w-5 h-5" weight="bold" />
                     </div>
                     <div className="text-right">
                       <div className="text-xl font-bold font-mono-custom text-[#181818]">
@@ -86,11 +95,6 @@ export const Results = () => {
                   <p className="text-sm text-[#686868] leading-relaxed">
                     {c.description}
                   </p>
-                </div>
-
-                <div className="mt-8 pt-4 border-t border-[#ededed] flex items-center justify-between text-xs text-[#858585]">
-                  <span>Verseo Benefit 0{i + 1}</span>
-                  <span className="font-mono-custom text-[#10b981]">Verified Impact ✓</span>
                 </div>
               </div>
             );

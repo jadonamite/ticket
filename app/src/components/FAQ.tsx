@@ -2,35 +2,35 @@
 
 import React, { useState } from "react";
 import { SectionHeader } from "./SectionHeader";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus } from "@phosphor-icons/react";
 
 export const FAQ = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   const faqs = [
     {
-      q: "What is Verseo?",
-      a: "Verseo is an AI-powered writing assistant that helps you generate, rewrite, and improve content in seconds. From emails and social posts to product descriptions and marketing copy, it helps you create content faster with less effort.",
+      q: "What is Ticket?",
+      a: "A prize-linked savings pool: put money in, take it out in full whenever you like, and get entries in a draw instead of interest. Your balance stays encrypted with FHEVM the whole time — from other players, from the operator, from the person who wrote the contract.",
     },
     {
-      q: "Who is Verseo designed for?",
-      a: "Verseo is built for founders, marketers, content creators, copywriters, and teams who need to produce consistent, high-converting content quickly without writer's block or messy drafts.",
+      q: "Can I lose my money?",
+      a: "No. You never lose principal — full withdrawal, any time, no penalty, no notice period. The only thing at stake is the prize, which is pooled and drawn for instead of paid as interest.",
     },
     {
-      q: "Do I need any writing experience?",
-      a: "Not at all. Verseo guides you through simple prompts and structured templates, turning basic ideas or rough bullets into polished, ready-to-publish copy.",
+      q: "If balances are encrypted, how do odds stay fair?",
+      a: "Odds come from an encrypted time-weighted balance — a running integral of your balance over time, maintained per depositor and decrypted by nobody, ever. Money held for three months outweighs money parked for an hour, without either being visible.",
     },
     {
-      q: "Can I customize the generated content?",
-      a: "Yes. You have full control over tone of voice, formatting, length, and style. You can edit inline, regenerate specific paragraphs, or apply custom brand voice rules.",
+      q: "What does Verify Draw actually prove?",
+      a: "From any settled draw, anyone can independently confirm four things: the randomness source, the time-weighted balances, the per-address weight cap, and the winner selection. Exactly one value is ever made public — the winner. Never a balance, never a total, never a losing entry.",
     },
     {
-      q: "What types of content can I create?",
-      a: "You can generate landing page copy, email sequences, blog posts, social media updates, ad creatives, product descriptions, video scripts, and internal documentation.",
+      q: "Does this hide who I am?",
+      a: "No — Ticket hides amounts, not addresses. It isn't built for anonymity; it's built so your balance and deposit timing aren't legible to everyone forever.",
     },
     {
-      q: "How fast can I generate content?",
-      a: "Most drafts, rewrites, and summaries are generated in under 3 seconds, allowing you to iterate and publish in real time.",
+      q: "What network is this on?",
+      a: "Ethereum Sepolia, built on Zama's FHEVM. The pool and demo token are deployed and verifiable on-chain; the demo token is faucet-mintable so it can be tried without asking anyone for tokens.",
     },
   ];
 
@@ -47,7 +47,7 @@ export const FAQ = () => {
         <SectionHeader
           badge="faq"
           title="Everything you need to know"
-          description="Whether you’re creating content solo or collaborating with a team, there’s a plan designed for your workflow."
+          description="If a fairness claim can't be checked by a stranger, it isn't a promise — it's an assertion."
         />
 
         <div className="max-w-3xl mx-auto space-y-4">
@@ -77,7 +77,7 @@ export const FAQ = () => {
                         : "bg-[#f6f6f6] text-[#686868] border border-[#ededed]"
                     }`}
                   >
-                    {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                    {isOpen ? <Minus weight="bold" className="w-4 h-4" /> : <Plus weight="bold" className="w-4 h-4" />}
                   </div>
                 </button>
 

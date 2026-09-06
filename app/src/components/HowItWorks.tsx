@@ -1,36 +1,32 @@
 import React from "react";
-import Image from "next/image";
 import { SectionHeader } from "./SectionHeader";
-import { MessageSquare, Sparkles, Send, ArrowRight } from "lucide-react";
+import { LockKey, DiceFive, Wallet } from "@phosphor-icons/react/dist/ssr";
 
 export const HowItWorks = () => {
   const steps = [
     {
       number: "01",
-      title: "Describe your idea",
-      subtitle: "The simpler the input, the faster you get results",
+      title: "Deposit",
+      subtitle: "Confidential from the first transaction",
       description:
-        "Input a rough bullet list, a single sentence, or raw thoughts. Select your desired format and tone.",
-      icon: MessageSquare,
-      color: "#006fff",
+        "Your balance is encrypted as an euint64 the moment it lands — never visible to other players, the operator, or the contract author.",
+      icon: LockKey,
     },
     {
       number: "02",
-      title: "Watch your content take shape",
-      subtitle: "Instant AI iterations tailored to your audience",
+      title: "Hold, and watch a draw",
+      subtitle: "Odds accrue automatically",
       description:
-        "Verseo analyzes your prompt, structures the message, and crafts compelling copy in under 3 seconds.",
-      icon: Sparkles,
-      color: "#76e5fc",
+        "Odds come from the time-weighted integral of your balance. On-chain randomness, unpredictable by anyone, selects a winner through a tournament.",
+      icon: DiceFive,
     },
     {
       number: "03",
-      title: "Refine your content before publishing",
-      subtitle: "One-click polish and seamless exports",
+      title: "Withdraw, in full, any time",
+      subtitle: "No penalty, no notice period",
       description:
-        "Adjust length, tweak wording with Smart Rewrite, and export directly to Notion, Webflow, or your newsletter tool.",
-      icon: Send,
-      color: "#10b981",
+        "Full principal back whenever you ask. Nobody loses principal — ever, no exceptions, no rounding against the depositor.",
+      icon: Wallet,
     },
   ];
 
@@ -44,11 +40,11 @@ export const HowItWorks = () => {
           badge="how it works"
           title={
             <>
-              Turn any idea into <br className="hidden sm:inline" />
-              ready-to-use content in seconds
+              Deposit. Wait. <br className="hidden sm:inline" />
+              Withdraw whenever you like.
             </>
           }
-          description="No complex tools or long workflows - just describe what you need, and Verseo does the rest."
+          description="The one genuinely awkward moment — revealing a winner takes an oracle round trip — is treated as a designed screen, not a spinner."
         />
 
         {/* 3 Step Cards Grid */}
@@ -65,10 +61,8 @@ export const HowItWorks = () => {
                     <span className="text-2xl font-black font-mono-custom text-[#181818]">
                       {s.number}
                     </span>
-                    <div
-                      className="w-10 h-10 rounded-2xl flex items-center justify-center text-[#181818] bg-[#f6f6f6] border border-[#ededed] group-hover:scale-105 transition-transform"
-                    >
-                      <Icon className="w-5 h-5" />
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-[#181818] bg-[#f6f6f6] border border-[#ededed] group-hover:scale-105 transition-transform">
+                      <Icon className="w-5 h-5" weight="bold" />
                     </div>
                   </div>
 
@@ -85,7 +79,7 @@ export const HowItWorks = () => {
 
                 <div className="mt-8 pt-4 border-t border-[#ededed] flex items-center justify-between text-xs text-[#858585]">
                   <span>Step {idx + 1} of 3</span>
-                  <span className="font-mono-custom text-[#181818]">Automated</span>
+                  <span className="font-mono-custom text-[#181818]">Zero documentation</span>
                 </div>
               </div>
             );

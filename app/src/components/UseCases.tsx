@@ -1,69 +1,38 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
 import { SectionHeader } from "./SectionHeader";
-import { ChevronRight, ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
+import { CaretRight, Check } from "@phosphor-icons/react";
 
 export const UseCases = () => {
   const [activeTab, setActiveTab] = useState(0);
 
-  const useCases = [
+  const audiences = [
     {
       number: "001",
-      title: "For marketers",
-      role: "Marketing Teams & Growth Leads",
+      title: "The saver who won't gamble",
+      role: "Primary — Full Principal, No Loss",
       description:
-        "Create ads, emails, landing pages, and social content - without starting from scratch. Quickly generate multiple variations, test different angles, and adapt your message for every platform in seconds.",
+        "Someone who wants the upside of a lottery ticket without the possibility of loss, and who doesn't want their savings balance, deposit timing, or win size legible to everyone forever.",
       bullets: [
-        "Generate 10+ ad headline variations simultaneously",
-        "A/B test value propositions with instant iterations",
-        "Transform one blog post into an entire campaign package",
+        "Full principal back, whenever you ask — no penalty, no notice period",
+        "Balance and deposit history stay encrypted from other players, the operator, and the contract author",
+        "Odds come from time held, not from timing a draw",
       ],
-      tags: ["Ad Creatives", "Landing Pages", "Multi-Variant Testing"],
-      image: "/assets/2uCm8cnVOvjGE6PdFkpqiqkTM.png",
+      tags: ["No loss", "Private balance", "Free to leave"],
     },
     {
       number: "002",
-      title: "For founders",
-      role: "Early-Stage & Scaling Founders",
+      title: "The judge, the auditor, the sceptic",
+      role: "Secondary — Verify Draw",
       description:
-        "Craft pitch decks, launch announcements, investor updates, and brand messaging with clarity and speed. Communicate high-level product vision without hiring an expensive agency.",
+        "A fairness claim is only worth what a stranger can check. “It's on-chain” and “I can verify the fairness” are different sentences — only the second one is a promise.",
       bullets: [
-        "Structure crisp monthly investor updates",
-        "Draft Product Hunt and launch day announcements",
-        "Refine positioning statements for maximum investor impact",
+        "Randomness source, time-weighted balances, weight cap, and winner selection — each independently checked",
+        "One click from any settled draw, legible to someone who's never heard of a prefix-sum tree",
+        "Everything needed to check fairness is public; nothing anyone could use to snoop is",
       ],
-      tags: ["Investor Updates", "Pitch Scripts", "Launch Copy"],
-      image: "/assets/Vf63KZZ3HXH75JHpG3fMZT1DL7o.png",
-    },
-    {
-      number: "003",
-      title: "For creators",
-      role: "Solopreneurs & Content Creators",
-      description:
-        "Turn rough outlines into engaging threads, newsletters, and articles while preserving your unique creative voice. Never let writer's block delay your publishing calendar.",
-      bullets: [
-        "Convert bullet thoughts into polished weekly newsletters",
-        "Create high-engagement threads with viral hooks",
-        "Maintain a 7-day content schedule in 30 minutes",
-      ],
-      tags: ["Newsletters", "Social Media", "Audience Growth"],
-      image: "/assets/m3aswBY1UUBkd3vPtSwGvdxjNsg.png",
-    },
-    {
-      number: "004",
-      title: "For teams",
-      role: "Agencies & Distributed Companies",
-      description:
-        "Collaborate on shared tone guidelines, review drafts in real-time, and ensure brand consistency across all touchpoints, clients, and team members.",
-      bullets: [
-        "Centralized tone-of-voice memory for all writers",
-        "Review and approve drafts with real-time feedback",
-        "Multi-project client management workspaces",
-      ],
-      tags: ["Shared Guidelines", "Real-time Review", "Team Workspaces"],
-      image: "/assets/iMm875MSCvJtmlENPQwNDe1KjyE.png",
+      tags: ["Verify Draw", "Public randomness", "No trust required"],
     },
   ];
 
@@ -74,20 +43,20 @@ export const UseCases = () => {
 
       <div className="framed-container px-4 sm:px-6">
         <SectionHeader
-          badge="use cases"
+          badge="who it's for"
           title={
             <>
-              Built for how you <br className="hidden sm:inline" />
-              actually create content
+              Two people this <br className="hidden sm:inline" />
+              was built for
             </>
           }
-          description="Whether you’re creating content daily or scaling it across a team, Verseo adapts to your workflow."
+          description="Not for anyone seeking anonymity — Ticket hides amounts, not addresses."
         />
 
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           {/* Left Accordion Column */}
-          <div className="lg:col-span-6 space-y-3">
-            {useCases.map((uc, index) => {
+          <div className="lg:col-span-5 space-y-3">
+            {audiences.map((uc, index) => {
               const isActive = activeTab === index;
               return (
                 <div
@@ -108,71 +77,57 @@ export const UseCases = () => {
                         {uc.title}
                       </h3>
                     </div>
-                    <ChevronRight
+                    <CaretRight
+                      weight="bold"
                       className={`w-4 h-4 text-[#858585] transition-transform duration-300 ${
                         isActive ? "rotate-90 text-[#181818]" : ""
                       }`}
                     />
                   </div>
-
-                  {isActive && (
-                    <div className="mt-4 pt-4 border-t border-[#ededed] animate-in fade-in duration-300">
-                      <p className="text-sm text-[#686868] leading-relaxed mb-4">
-                        {uc.description}
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {uc.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="text-[11px] font-medium bg-[#f6f6f6] text-[#505050] px-2.5 py-1 rounded-full border border-[#ededed]"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               );
             })}
           </div>
 
-          {/* Right Active Preview Visual */}
-          <div className="lg:col-span-6">
+          {/* Right Active Preview */}
+          <div className="lg:col-span-7">
             <div className="verseo-card p-6 md:p-8 bg-white border border-[#ededed] shadow-lg rounded-3xl relative overflow-hidden">
               <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#ededed]">
                 <div>
                   <span className="text-xs font-mono-custom text-[#858585] block mb-0.5">
-                    Target Role
+                    {audiences[activeTab].role}
                   </span>
                   <h4 className="text-base font-bold text-[#181818]">
-                    {useCases[activeTab].role}
+                    {audiences[activeTab].title}
                   </h4>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-[#181818] text-white flex items-center justify-center text-xs font-mono-custom">
-                  {useCases[activeTab].number}
+                <div className="w-8 h-8 rounded-full bg-[#181818] text-white flex items-center justify-center text-xs font-mono-custom shrink-0">
+                  {audiences[activeTab].number}
                 </div>
               </div>
 
-              {/* Bullet Points */}
+              <p className="text-sm text-[#686868] leading-relaxed mb-6">
+                {audiences[activeTab].description}
+              </p>
+
               <div className="space-y-2.5 mb-6">
-                {useCases[activeTab].bullets.map((b, i) => (
+                {audiences[activeTab].bullets.map((b, i) => (
                   <div key={i} className="flex items-start gap-2.5 text-xs sm:text-sm text-[#404040]">
-                    <CheckCircle2 className="w-4 h-4 text-[#10b981] flex-shrink-0 mt-0.5" />
+                    <Check weight="bold" className="w-4 h-4 text-[#10b981] flex-shrink-0 mt-0.5" />
                     <span>{b}</span>
                   </div>
                 ))}
               </div>
 
-              {/* Image Preview */}
-              <div className="relative w-full h-56 rounded-2xl bg-[#f6f6f6] border border-[#ededed] overflow-hidden">
-                <Image
-                  src={useCases[activeTab].image}
-                  alt={useCases[activeTab].title}
-                  fill
-                  className="object-cover object-top transition-all duration-500"
-                  sizes="(max-width: 1024px) 100vw, 500px"
-                />
+              <div className="flex flex-wrap gap-2">
+                {audiences[activeTab].tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="text-[11px] font-medium bg-[#f6f6f6] text-[#505050] px-2.5 py-1 rounded-full border border-[#ededed]"
+                  >
+                    {tag}
+                  </span>
+                ))}
               </div>
             </div>
           </div>
