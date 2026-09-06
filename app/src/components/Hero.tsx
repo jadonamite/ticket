@@ -170,6 +170,23 @@ export const Hero = () => {
   const marker3Glow = useTransform(smoothProgress, [0.64, 0.67, 0.74, 0.77], [0, 1, 1, 0]);
   const marker4Glow = useTransform(smoothProgress, [0.78, 0.81, 0.87, 0.90], [0, 1, 1, 0]);
 
+  const marker1BorderColor = useTransform(marker1Glow, [0, 1], ["rgba(255,255,255,0.22)", "#ffffff"]);
+  const marker1BoxShadow = useTransform(marker1Glow, [0, 1], ["0 2px 8px rgba(0,0,0,0.15)", "0 0 32px rgba(255, 255, 255, 0.95), inset 0 0 16px rgba(255,255,255,0.35)"]);
+  const marker1BackgroundColor = useTransform(marker1Glow, [0, 1], ["rgba(15, 12, 28, 0.45)", "rgba(116, 140, 235, 0.35)"]);
+  const marker1Scale = useTransform(marker1Glow, [0, 1], [1.0, 1.025]);
+
+  const marker2BorderColor = useTransform(marker2Glow, [0, 1], ["rgba(255,255,255,0.22)", "#ffcc40"]);
+  const marker2BoxShadow = useTransform(marker2Glow, [0, 1], ["0 2px 8px rgba(0,0,0,0.15)", "0 0 32px rgba(255, 204, 64, 0.95), inset 0 0 16px rgba(255,204,64,0.35)"]);
+  const marker2BackgroundColor = useTransform(marker2Glow, [0, 1], ["rgba(15, 12, 28, 0.45)", "rgba(255, 204, 64, 0.28)"]);
+  const marker2Scale = useTransform(marker2Glow, [0, 1], [1.0, 1.025]);
+
+  const marker3BorderColor = useTransform(marker3Glow, [0, 1], ["rgba(255,255,255,0.22)", "#76e5fc"]);
+  const marker3BoxShadow = useTransform(marker3Glow, [0, 1], ["0 2px 8px rgba(0,0,0,0.15)", "0 0 32px rgba(118, 229, 252, 0.95), inset 0 0 16px rgba(118,229,252,0.35)"]);
+  const marker3BackgroundColor = useTransform(marker3Glow, [0, 1], ["rgba(15, 12, 28, 0.45)", "rgba(118, 229, 252, 0.28)"]);
+  const marker3Scale = useTransform(marker3Glow, [0, 1], [1.0, 1.025]);
+
+  const marker4Scale = useTransform(marker4Glow, [0, 1], [0.95, 1.08]);
+
   return (
     <div ref={containerRef} className="relative bg-[#0d091a] text-white font-sans">
       {/* ========================================================================= */}
@@ -417,10 +434,10 @@ export const Hero = () => {
                           {/* BAY 01: 100% PRINCIPAL PROTECTED */}
                           <motion.div
                             style={{
-                              borderColor: useTransform(marker1Glow, [0, 1], ["rgba(255,255,255,0.22)", "#ffffff"]),
-                              boxShadow: useTransform(marker1Glow, [0, 1], ["0 2px 8px rgba(0,0,0,0.15)", "0 0 32px rgba(255, 255, 255, 0.95), inset 0 0 16px rgba(255,255,255,0.35)"]),
-                              backgroundColor: useTransform(marker1Glow, [0, 1], ["rgba(15, 12, 28, 0.45)", "rgba(116, 140, 235, 0.35)"]),
-                              scale: useTransform(marker1Glow, [0, 1], [1.0, 1.025]),
+                              borderColor: marker1BorderColor,
+                              boxShadow: marker1BoxShadow,
+                              backgroundColor: marker1BackgroundColor,
+                              scale: marker1Scale,
                             }}
                             className="border rounded-xl px-2.5 py-1 sm:px-3 sm:py-1.5 backdrop-blur-xs transition-all duration-300"
                           >
@@ -443,10 +460,10 @@ export const Hero = () => {
                           {/* BAY 02: ENCRYPTED ODDS INVARIANT */}
                           <motion.div
                             style={{
-                              borderColor: useTransform(marker2Glow, [0, 1], ["rgba(255,255,255,0.22)", "#ffcc40"]),
-                              boxShadow: useTransform(marker2Glow, [0, 1], ["0 2px 8px rgba(0,0,0,0.15)", "0 0 32px rgba(255, 204, 64, 0.95), inset 0 0 16px rgba(255,204,64,0.35)"]),
-                              backgroundColor: useTransform(marker2Glow, [0, 1], ["rgba(15, 12, 28, 0.45)", "rgba(255, 204, 64, 0.28)"]),
-                              scale: useTransform(marker2Glow, [0, 1], [1.0, 1.025]),
+                              borderColor: marker2BorderColor,
+                              boxShadow: marker2BoxShadow,
+                              backgroundColor: marker2BackgroundColor,
+                              scale: marker2Scale,
                             }}
                             className="border rounded-xl px-2.5 py-1 sm:px-3 sm:py-1.5 backdrop-blur-xs transition-all duration-300"
                           >
@@ -469,10 +486,10 @@ export const Hero = () => {
                           {/* BAY 03: FHEVM CONFIDENTIALITY */}
                           <motion.div
                             style={{
-                              borderColor: useTransform(marker3Glow, [0, 1], ["rgba(255,255,255,0.22)", "#76e5fc"]),
-                              boxShadow: useTransform(marker3Glow, [0, 1], ["0 2px 8px rgba(0,0,0,0.15)", "0 0 32px rgba(118, 229, 252, 0.95), inset 0 0 16px rgba(118,229,252,0.35)"]),
-                              backgroundColor: useTransform(marker3Glow, [0, 1], ["rgba(15, 12, 28, 0.45)", "rgba(118, 229, 252, 0.28)"]),
-                              scale: useTransform(marker3Glow, [0, 1], [1.0, 1.025]),
+                              borderColor: marker3BorderColor,
+                              boxShadow: marker3BoxShadow,
+                              backgroundColor: marker3BackgroundColor,
+                              scale: marker3Scale,
                             }}
                             className="border rounded-xl px-2.5 py-1 sm:px-3 sm:py-1.5 backdrop-blur-xs transition-all duration-300"
                           >
@@ -516,7 +533,7 @@ export const Hero = () => {
                       <motion.div
                         style={{
                           opacity: marker4Glow,
-                          scale: useTransform(marker4Glow, [0, 1], [0.95, 1.08]),
+                          scale: marker4Scale,
                         }}
                         className="absolute right-[8%] sm:right-[11%] top-1/2 -translate-y-1/2 w-[92px] h-[92px] sm:w-[120px] sm:h-[120px] rounded-full border-2 border-[#a2e198] shadow-[0_0_40px_rgba(162,225,152,0.95),inset_0_0_20px_rgba(162,225,152,0.5)] pointer-events-none transition-all duration-300"
                       />
