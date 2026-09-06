@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useScroll, useTransform, useSpring } from "motion/react";
@@ -42,6 +42,7 @@ const ScrollWord = ({
 
 export const Hero = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [heroVariant, setHeroVariant] = useState<"hybrid" | "baked" | "original">("hybrid");
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -150,24 +151,24 @@ export const Hero = () => {
   // The ticket is big in the center of the hero at rest, then stays visible until handoff
   const ticketOpacity = useTransform(smoothProgress, [0, 0.88, 0.95], [1, 1, 0]);
 
-  // Right-hand callout card opacities (continuous sequence across docked scroll phase)
-  const card1Opacity = useTransform(smoothProgress, [0.36, 0.40, 0.47, 0.51], [0, 1, 1, 0]);
-  const card1Y = useTransform(smoothProgress, [0.36, 0.40, 0.47, 0.51], [25, 0, 0, -25]);
+  // Right-hand callout card opacities (crisp sequential transitions without overlapping ghosting)
+  const card1Opacity = useTransform(smoothProgress, [0.36, 0.39, 0.46, 0.49], [0, 1, 1, 0]);
+  const card1Y = useTransform(smoothProgress, [0.36, 0.39, 0.46, 0.49], [25, 0, 0, -25]);
 
-  const card2Opacity = useTransform(smoothProgress, [0.49, 0.53, 0.60, 0.64], [0, 1, 1, 0]);
-  const card2Y = useTransform(smoothProgress, [0.49, 0.53, 0.60, 0.64], [25, 0, 0, -25]);
+  const card2Opacity = useTransform(smoothProgress, [0.50, 0.53, 0.60, 0.63], [0, 1, 1, 0]);
+  const card2Y = useTransform(smoothProgress, [0.50, 0.53, 0.60, 0.63], [25, 0, 0, -25]);
 
-  const card3Opacity = useTransform(smoothProgress, [0.62, 0.66, 0.73, 0.77], [0, 1, 1, 0]);
-  const card3Y = useTransform(smoothProgress, [0.62, 0.66, 0.73, 0.77], [25, 0, 0, -25]);
+  const card3Opacity = useTransform(smoothProgress, [0.64, 0.67, 0.74, 0.77], [0, 1, 1, 0]);
+  const card3Y = useTransform(smoothProgress, [0.64, 0.67, 0.74, 0.77], [25, 0, 0, -25]);
 
-  const card4Opacity = useTransform(smoothProgress, [0.75, 0.79, 0.86, 0.90], [0, 1, 1, 0]);
-  const card4Y = useTransform(smoothProgress, [0.75, 0.79, 0.86, 0.90], [25, 0, 0, -25]);
+  const card4Opacity = useTransform(smoothProgress, [0.78, 0.81, 0.87, 0.90], [0, 1, 1, 0]);
+  const card4Y = useTransform(smoothProgress, [0.78, 0.81, 0.87, 0.90], [25, 0, 0, -25]);
 
   // Blueprint Callout Markers & Arrows
-  const marker1Glow = useTransform(smoothProgress, [0.36, 0.40, 0.47, 0.51], [0, 1, 1, 0]);
-  const marker2Glow = useTransform(smoothProgress, [0.49, 0.53, 0.60, 0.64], [0, 1, 1, 0]);
-  const marker3Glow = useTransform(smoothProgress, [0.62, 0.66, 0.73, 0.77], [0, 1, 1, 0]);
-  const marker4Glow = useTransform(smoothProgress, [0.75, 0.79, 0.86, 0.90], [0, 1, 1, 0]);
+  const marker1Glow = useTransform(smoothProgress, [0.36, 0.39, 0.46, 0.49], [0, 1, 1, 0]);
+  const marker2Glow = useTransform(smoothProgress, [0.50, 0.53, 0.60, 0.63], [0, 1, 1, 0]);
+  const marker3Glow = useTransform(smoothProgress, [0.64, 0.67, 0.74, 0.77], [0, 1, 1, 0]);
+  const marker4Glow = useTransform(smoothProgress, [0.78, 0.81, 0.87, 0.90], [0, 1, 1, 0]);
 
   return (
     <div ref={containerRef} className="relative bg-[#0d091a] text-white font-sans">
@@ -295,61 +296,65 @@ export const Hero = () => {
               {/* Zone 1 Line: Principal Invariant */}
               <motion.g style={{ opacity: card1Opacity }}>
                 <path
-                  d="M 485 535 L 620 535 L 720 425 L 940 425"
+                  d="M 420 520 L 580 520 L 700 390 L 880 390"
                   fill="none"
                   stroke="#ffffff"
                   strokeWidth="2.5"
                   strokeDasharray="8 5"
                   filter="url(#laserGlowWhite)"
                 />
-                <circle cx="485" cy="535" r="4.5" fill="#ffffff" />
-                <circle cx="485" cy="535" r="12" fill="#ffffff" className="animate-ping" opacity="0.4" />
-                <circle cx="940" cy="425" r="4.5" fill="#ffffff" />
+                <circle cx="420" cy="520" r="4.5" fill="#ffffff" />
+                <circle cx="420" cy="520" r="12" fill="#ffffff" className="animate-ping" opacity="0.4" />
+                <circle cx="880" cy="390" r="4.5" fill="#ffffff" />
+                <circle cx="880" cy="390" r="10" fill="#ffffff" className="animate-ping" opacity="0.3" />
               </motion.g>
 
               {/* Zone 2 Line: Time-Weighted Integral */}
               <motion.g style={{ opacity: card2Opacity }}>
                 <path
-                  d="M 485 450 L 640 450 L 675 425 L 940 425"
+                  d="M 420 450 L 640 450 L 700 390 L 880 390"
                   fill="none"
                   stroke="#ffcc40"
                   strokeWidth="2.5"
                   strokeDasharray="8 5"
                   filter="url(#laserGlowGold)"
                 />
-                <circle cx="485" cy="450" r="4.5" fill="#ffcc40" />
-                <circle cx="485" cy="450" r="12" fill="#ffcc40" className="animate-ping" opacity="0.4" />
-                <circle cx="940" cy="425" r="4.5" fill="#ffcc40" />
+                <circle cx="420" cy="450" r="4.5" fill="#ffcc40" />
+                <circle cx="420" cy="450" r="12" fill="#ffcc40" className="animate-ping" opacity="0.4" />
+                <circle cx="880" cy="390" r="4.5" fill="#ffcc40" />
+                <circle cx="880" cy="390" r="10" fill="#ffcc40" className="animate-ping" opacity="0.3" />
               </motion.g>
 
               {/* Zone 3 Line: FHEVM Confidentiality */}
               <motion.g style={{ opacity: card3Opacity }}>
                 <path
-                  d="M 485 365 L 630 365 L 690 425 L 940 425"
+                  d="M 420 380 L 600 380 L 640 390 L 880 390"
                   fill="none"
                   stroke="#76e5fc"
                   strokeWidth="2.5"
                   strokeDasharray="8 5"
                   filter="url(#laserGlowCyan)"
                 />
-                <circle cx="485" cy="365" r="4.5" fill="#76e5fc" />
-                <circle cx="485" cy="365" r="12" fill="#76e5fc" className="animate-ping" opacity="0.4" />
-                <circle cx="940" cy="425" r="4.5" fill="#76e5fc" />
+                <circle cx="420" cy="380" r="4.5" fill="#76e5fc" />
+                <circle cx="420" cy="380" r="12" fill="#76e5fc" className="animate-ping" opacity="0.4" />
+                <circle cx="880" cy="390" r="4.5" fill="#76e5fc" />
+                <circle cx="880" cy="390" r="10" fill="#76e5fc" className="animate-ping" opacity="0.3" />
               </motion.g>
 
               {/* Zone 4 Line: Verification Seal */}
               <motion.g style={{ opacity: card4Opacity }}>
                 <path
-                  d="M 485 260 L 600 260 L 760 425 L 940 425"
+                  d="M 420 255 L 580 255 L 700 390 L 880 390"
                   fill="none"
                   stroke="#a2e198"
                   strokeWidth="2.5"
                   strokeDasharray="8 5"
                   filter="url(#laserGlowGreen)"
                 />
-                <circle cx="485" cy="260" r="4.5" fill="#a2e198" />
-                <circle cx="485" cy="260" r="12" fill="#a2e198" className="animate-ping" opacity="0.4" />
-                <circle cx="940" cy="425" r="4.5" fill="#a2e198" />
+                <circle cx="420" cy="255" r="4.5" fill="#a2e198" />
+                <circle cx="420" cy="255" r="12" fill="#a2e198" className="animate-ping" opacity="0.4" />
+                <circle cx="880" cy="390" r="4.5" fill="#a2e198" />
+                <circle cx="880" cy="390" r="10" fill="#a2e198" className="animate-ping" opacity="0.3" />
               </motion.g>
             </svg>
 
@@ -370,7 +375,13 @@ export const Hero = () => {
                 {/* 3D DIE-CUT INDUSTRIAL CHASSIS (#748CEB WITH SUNRISE RIM LIGHTING) */}
                 <div className="relative w-full h-full">
                   <Image
-                    src="/images/ticket-chassis-cutout.png"
+                    src={
+                      heroVariant === "original"
+                        ? "/images/ticket-paper-blank-cutout.png"
+                        : heroVariant === "baked"
+                        ? "/images/ticket-vector-masked.png"
+                        : "/images/ticket-chassis-cutout.png"
+                    }
                     alt="Ticket — Precision Industrial Hardware Voucher #748CEB"
                     fill
                     priority
@@ -378,11 +389,9 @@ export const Hero = () => {
                     className="object-contain object-center"
                   />
 
-                  {/* ATMOSPHERIC HORIZON RIM-LIGHT REFLECTION */}
-                  <div className="absolute inset-0 rounded-[18px] pointer-events-none bg-gradient-to-b from-amber-200/20 via-transparent to-transparent mix-blend-screen" />
-
-                  {/* VECTOR TYPOGRAPHY & PRECISION INVARIANT BAYS (ALWAYS PRESENT, POPS ON SCROLL) */}
-                  <div className="absolute inset-0 flex pointer-events-none p-3.5 sm:p-5 md:p-6">
+                  {/* VECTOR TYPOGRAPHY & PRECISION INVARIANT BAYS (HIDDEN IN BAKED MODE) */}
+                  {heroVariant !== "baked" && (
+                    <div className="absolute inset-0 flex pointer-events-none p-3.5 sm:p-5 md:p-6">
                     
                     {/* LEFT 67%: MAIN CHASSIS BODY */}
                     <div className="w-[67%] pr-3 sm:pr-5 flex flex-col justify-between text-left">
@@ -523,6 +532,7 @@ export const Hero = () => {
                       </div>
                     </div>
                   </div>
+                  )}
 
                 </div>
               </motion.div>
@@ -808,6 +818,44 @@ export const Hero = () => {
           </div>
         </div>
       </section>
+
+      {/* FLOATING HERO COMPARISON CONTROLLER */}
+      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 px-3 py-2 bg-[#0c0a14]/90 backdrop-blur-lg border border-white/20 rounded-full shadow-[0_12px_40px_rgba(0,0,0,0.6)] text-[11px] font-mono text-white select-none">
+        <span className="text-white/40 text-[9px] uppercase tracking-widest pl-1 font-bold">Compare Hero:</span>
+        <button
+          type="button"
+          onClick={() => setHeroVariant("original")}
+          className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
+            heroVariant === "original"
+              ? "bg-white text-[#121212] font-bold shadow-sm scale-105"
+              : "text-white/70 hover:text-white hover:bg-white/10"
+          }`}
+        >
+          1. Original Paper
+        </button>
+        <button
+          type="button"
+          onClick={() => setHeroVariant("baked")}
+          className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
+            heroVariant === "baked"
+              ? "bg-white text-[#121212] font-bold shadow-sm scale-105"
+              : "text-white/70 hover:text-white hover:bg-white/10"
+          }`}
+        >
+          2. 3D Vector-Masked
+        </button>
+        <button
+          type="button"
+          onClick={() => setHeroVariant("hybrid")}
+          className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
+            heroVariant === "hybrid"
+              ? "bg-white text-[#121212] font-bold shadow-sm scale-105"
+              : "text-white/70 hover:text-white hover:bg-white/10"
+          }`}
+        >
+          3. 3D Hybrid DOM
+        </button>
+      </div>
     </div>
   );
 };
